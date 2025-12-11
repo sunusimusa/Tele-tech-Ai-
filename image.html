@@ -1,51 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tele Tech AI - Image Generator</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<title>AI Image Generator</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-900">
-
-<div class="min-h-screen text-white p-6">
-  <h2 class="text-3xl font-bold text-center mb-6">AI Image Generator</h2>
-
-  <div class="max-w-xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-xl">
-    <input id="prompt" class="input mb-4" placeholder="Enter prompt..." />
-    <button id="generateBtn" class="btn bg-green-600">Generate</button>
-    <div id="result" class="mt-6 text-center"></div>
-  </div>
-
+<body class="bg">
+<div class="card">
+<h2>AI Image Generator</h2>
+<textarea id="prompt" placeholder="Describe your image"></textarea>
+<button id="genBtn">Generate</button>
+<div id="result"></div>
 </div>
-
 <script>
-const token = localStorage.getItem('token');
-if (!token) window.location.href = './index.html';
-
-document.getElementById('generateBtn').onclick = async () => {
-  const prompt = document.getElementById('prompt').value;
-  document.getElementById('result').innerHTML = 'Generating...';
-
-  const res = await fetch('/generate', {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` 
-    },
-    body: JSON.stringify({ prompt })
-  });
-
-  const data = await res.json();
-
-  if (data.image) {
-    document.getElementById('result').innerHTML = 
-      `<img src="${data.image}" class="rounded-xl w-full mt-4">`;
-  } else {
-    document.getElementById('result').innerHTML = 'Error generating image';
-  }
-};
+document.getElementById('genBtn').addEventListener('click', async ()=>{
+ let prompt=document.getElementById('prompt').value;
+ let token=localStorage.getItem('token');
+ let res=await fetch('/generate-image',{
+   method:'POST',
+   headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+   body:JSON.stringify({prompt})
+ });
+ let data=await res.json();
+ if(data.image){
+   document.getElementById('result').innerHTML='<img src="'+data.image+'" style="width:100%">';
+ }else alert('Error generating image');
+});
 </script>
-
 </body>
 </html>
