@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tele Tech AI - Generator</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body class="bg">
+  <div class="card">
+    <h2>AI Image Generator</h2>
+    <textarea id="prompt" placeholder="Describe your image..." rows="4"></textarea>
+    <button id="genBtn">Generate</button>
+    <div id="result" style="margin-top:12px"></div>
+    <p style="font-size:12px;margin-top:10px"><a href="/frontend/index.html">Logout</a></p>
+  </div>
+
+  <script>
+    // verify user
+    const token = localStorage.getItem('token');
+    if (!token) location.href = '/frontend/index.html';
+
+    document.getElementById('genBtn').addEventListener('click', async () => {
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) return alert('Enter a prompt');
+
+      document.getElementById('result').innerText = 'Generating...';
+
+      const res = await fetch('/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+
+      if (data.success && data.image) {
+        document.getElementById('result').innerHTML = `<img src="${data.image}" style="max-width:100%;border-radius:8px" />`;
+      } else {
+        document.getElementById('result').innerText = data.message || 'Failed to generate';
+      }
+    });
+  </script>
+</body>
+</html>
