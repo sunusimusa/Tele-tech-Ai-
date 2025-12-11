@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tele Tech AI - Register</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body class="bg">
+  <div class="card">
+    <h2>Create Account</h2>
+    <form id="regForm">
+      <input id="regEmail" placeholder="Email" required />
+      <input id="regPass" type="password" placeholder="Password" required />
+      <button type="submit">Register</button>
+    </form>
+    <p>Have account? <a href="index.html">Login</a></p>
+  </div>
+
+  <script>
+    document.getElementById('regForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPass').value;
+
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('token', data.token);
+        location.href = '/frontend/generator.html';
+      } else {
+        alert(data.message || 'Register failed');
+      }
+    });
+  </script>
+</body>
+</html>
