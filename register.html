@@ -1,36 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Register - Tele Tech AI</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body class="bg">
-<div class="card">
-<h2>Create Account</h2>
-<form id="regForm">
-<input type="text" id="username" placeholder="Username" required>
-<input type="password" id="password" placeholder="Password" equired>
-<button type="submit">Register</button>
-</form>
-<p>Have account? <a href="index.html">Login</a></p>
-</div>
 <script>
-document.getElementById('regForm').addEventListener('submit', async (e)=>{
- e.preventDefault();
- let username=document.getElementById('username').value;
- let password=document.getElementById('password').value;
- let res=await fetch('/register',{
-   method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({username,password})
- });
- let data=await res.json();
- if(data.success){
-   localStorage.setItem('token',data.token);
-   window.location='image.html';
- }else alert(data.message);
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("regEmail").value;
+    const password = document.getElementById("regPass").value;
+
+    const res = await fetch("https://tele-tech-ai.onrender.com/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+        alert("Account created! Login now.");
+        window.location.href = "/index.html";
+    } else {
+        alert(data.message || "Register failed.");
+    }
 });
 </script>
-</body>
-</html>
