@@ -1,27 +1,5 @@
-body {
-  font-family: Arial, sans-serif;
-}
 
-.input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  background: #2d2d2d;
-  color: white;
-  border: none;
-}
-
-.btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: bold;
-  background: #2563eb;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.btn:hover {
-  opacity: .8;
-}
+body.bg { background:#111; color:white; font-family:sans-serif; }
+.card { background:#222; padding:20px; margin:40px auto; max-width:350px; border-radius:12px; }
+input, textarea { width:100%; padding:10px; margin:10px 0; background:#333; border:none; border-radius:6px; color:white; }
+button { width:100%; padding:10px; background:#0a5bff; border:none; color:white; border-radius:6px; font-size:16px; }
