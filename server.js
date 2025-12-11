@@ -8,12 +8,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-// ---- OPENAI SETUP ----
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-// AI Route
 app.post("/api/chat", async (req, res) => {
     try {
         const userMsg = req.body.message;
@@ -30,7 +28,6 @@ app.post("/api/chat", async (req, res) => {
     }
 });
 
-// Static file for website
 app.use(express.static("./"));
 
 app.listen(PORT, () => console.log("Tele Tech AI running on " + PORT));
