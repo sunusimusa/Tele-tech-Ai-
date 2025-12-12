@@ -1,23 +1,74 @@
-<!DOCTYPE html><html><body>
-<h2>Login</h2>
-<input id="email" placeholder="Email"><br><br>
-<input id="password" placeholder="Password"><br><br>
-<button onclick="login()">Login</button>
-<p id="msg"></p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+      padding: 30px;
+    }
+
+    .box {
+      max-width: 330px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      background: blue;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Login</h2>
+
+  <input id="email" type="text" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+  <p id="msg"></p>
+
+  <p>Ba ka da account? <a href="/register">Register</a></p>
+</div>
 
 <script>
 async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
   const res = await fetch("/api/login", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value
-    })
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
   });
 
   const data = await res.json();
-  msg.innerText = data.message;
+  document.getElementById("msg").innerText = data.message;
+
+  if (data.success) {
+    window.location.href = "/generator.html"; 
+  }
 }
 </script>
-</body></html>
+
+</body>
+</html>
