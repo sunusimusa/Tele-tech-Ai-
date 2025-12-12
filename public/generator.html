@@ -1,1 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Image Generator</title>
+</head>
+<body>
+  <h2>AI Image Generator</h2>
 
+  <input id="prompt" placeholder="Enter your prompt"><br><br>
+  <button onclick="generate()">Generate</button>
+
+  <p id="msg"></p>
+
+  <img id="result" style="width:300px; margin-top:20px; display:none;" />
+
+<script>
+async function generate() {
+  const prompt = document.getElementById('prompt').value;
+
+  const res = await fetch("/api/generate", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ prompt })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    msg.innerText = data.error;
+  } else {
+    msg.innerText = "";
+    result.style.display = "block";
+    result.src = data.image;
+  }
+}
+</script>
+</body>
+</html>
