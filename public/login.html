@@ -1,73 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f4f4;
-      padding: 30px;
-    }
-
-    .box {
-      max-width: 330px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-
-    button {
-      background: blue;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="box">
-  <h2>Login</h2>
+    <div class="container">
+        <h2>Login</h2>
 
-  <input id="email" type="text" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
+        <form id="loginForm">
+            <input type="email" id="email" placeholder="Enter email" required>
+            <input type="password" id="password" placeholder="Enter password" required>
 
-  <button onclick="login()">Login</button>
-  <p id="msg"></p>
+            <button type="submit">Login</button>
+        </form>
 
-  <p>Ba ka da account? <a href="/register">Register</a></p>
-</div>
+        <p>Ba ka da account? <a href="register.html">Register here</a></p>
+
+        <p id="status" style="color: red; margin-top: 10px;"></p>
+    </div>
 
 <script>
-async function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+    const form = document.getElementById("loginForm");
+    const status = document.getElementById("status");
 
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-  const data = await res.json();
-  document.getElementById("msg").innerText = data.message;
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
 
-  if (data.success) {
-    window.location.href = "/generator.html"; 
-  }
-}
+        try {
+            const res = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                status.textContent = data.message || "Login failed";
+                return;
+            }
+
+            // Save token
+            localStorage.setItem("token", data.token);
+
+            // Redirect to generator
+            window.location.href = "generator.html";
+
+        } catch (err) {
+            status.textContent = "Network error, try again.";
+        }
+    });
 </script>
 
 </body>
