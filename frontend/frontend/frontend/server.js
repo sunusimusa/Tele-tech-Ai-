@@ -1,4 +1,6 @@
-
+app.get('/register', (req, res) => {
+  res.sendFile(__dirname + '/public/register.html');
+});
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
