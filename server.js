@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const OpenAI = require("openai");
 // ====== APP ======
 const app = express();
 const PORT = process.env.PORT || 10000;
