@@ -28,14 +28,45 @@
       style="width:100%; padding:12px; background:#007bff; color:white; border:none; border-radius:6px;">
       Generate Image
     </button>
+<script>
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value.trim();
+  const msg = document.getElementById("msg");
+  const output = document.getElementById("output");
 
-    <p id="msg" style="text-align:center; margin-top:15px;"></p>
+  msg.innerText = "";
+  output.style.display = "none";
 
-  
-    <img id="output"
-      style="max-width:100%; display:none; margin-top:15px; border-radius:8px;" />
+  if (!prompt) {
+    msg.innerText = "Enter a prompt ❌";
+    return;
+  }
 
-  </div>
+  msg.innerText = "Generating image... ⏳";
+
+  try {
+    const res = await fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      // 🔥 MU KARYA CACHE
+      output.src = data.image + "&t=" + Date.now();
+      output.style.display = "block";
+      msg.innerText = "Done ✅";
+    } else {
+      msg.innerText = "Failed ❌";
+    }
+
+  } catch (e) {
+    msg.innerText = "Server error ❌";
+  }
+}
+</script>
 
   <script>
     async function generateImage() {
