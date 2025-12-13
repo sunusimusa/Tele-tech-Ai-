@@ -1,37 +1,81 @@
-<script>
-async function loginUser() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const msg = document.getElementById("msg");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-  msg.style.color = "red";
+<body style="font-family: Arial; background:#f4f6f9;">
 
-  if (!username || !password) {
-    msg.innerText = "Please fill all fields";
-    return;
-  }
+  <div style="
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  ">
 
-  try {
-    const res = await fetch("https://tele-tech-ai.onrender.com/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
+    <h2 style="text-align:center;">Login</h2>
 
-    const data = await res.json();
+    <input id="username" placeholder="Username or Email"
+      style="width:100%; padding:10px; margin-bottom:15px;"><br>
 
-    if (data.success) {
-      msg.style.color = "green";
-      msg.innerText = "Login successful! Redirecting...";
-      setTimeout(() => {
-        window.location.href = "/generator.html";
-      }, 1000);
-    } else {
-      msg.innerText = data.message || "Login failed";
+    <input id="password" type="password" placeholder="Password"
+      style="width:100%; padding:10px; margin-bottom:15px;"><br>
+
+    <button onclick="loginUser()"
+      style="width:100%; padding:12px; background:#28a745; color:white; border:none; border-radius:6px;">
+      Login
+    </button>
+
+    <p id="msg" style="text-align:center; margin-top:15px;"></p>
+
+    <p style="text-align:center; margin-top:10px;">
+      No account?
+      <a href="/register.html">Register</a>
+    </p>
+
+  </div>
+
+  <script>
+    async function loginUser() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msg = document.getElementById("msg");
+
+      msg.style.color = "red";
+
+      if (!username || !password) {
+        msg.innerText = "Please fill all fields";
+        return;
+      }
+
+      try {
+        const res = await fetch("https://tele-tech-ai.onrender.com/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          msg.style.color = "green";
+          msg.innerText = "Login successful! Redirecting...";
+          setTimeout(() => {
+            window.location.href = "/generator.html";
+          }, 1200);
+        } else {
+          msg.innerText = data.message || "Login failed";
+        }
+
+      } catch (error) {
+        msg.innerText = "Error connecting to server";
+      }
     }
+  </script>
 
-  } catch (error) {
-    msg.innerText = "Error connecting to server";
-  }
-}
-</script>
+</body>
+</html>
