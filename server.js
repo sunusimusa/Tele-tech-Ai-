@@ -17,7 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // ====== STATIC FILES ======
 app.use(express.static(path.join(__dirname, "public")));
-
+app.get("/register", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "register.html"));
+});
 // ====== GET PAGES ======   👈 NAN NE
 app.get("/register", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "register.html"));
