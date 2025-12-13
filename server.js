@@ -32,8 +32,7 @@ function saveUsers(users) {
 }
 
 // ================= PAGE ROUTES =================
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+
 });
 app.get("/register", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "register.html"));
