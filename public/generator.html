@@ -41,7 +41,7 @@ async function generateImage() {
     const data = await res.json();
 
     if (data.success) {
-      img.src = data.image;
+      output.src = data.image + "&sig=" + Date.now();
       img.style.display = "block";
       msg.innerText = "Done ✅";
     } else {
