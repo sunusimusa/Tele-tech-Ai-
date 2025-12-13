@@ -20,6 +20,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
 app.get("/register", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "register.html"));
 });
@@ -28,31 +32,26 @@ app.get("/generator", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "generator.html"));
 });
 
-// ====== FREE IMAGE API (NO PAYMENT) ======
+// ====== FREE IMAGE GENERATOR (NO API KEY) ======
 app.post("/generate", async (req, res) => {
-  try {
-    const { prompt } = req.body;
+  const { prompt } = req.body;
 
-    if (!prompt) {
-      return res.json({ success: false, message: "Prompt is required" });
-    }
-
-    const imageUrl =
-      "https://source.unsplash.com/512x512/?" +
-      encodeURIComponent(prompt);
-
-    res.json({
-      success: true,
-      image: imageUrl
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, message: "Image generation failed" });
+  if (!prompt) {
+    return res.json({ success: false, message: "Prompt required" });
   }
+
+  // Unsplash random image
+  const imageUrl =
+    "https://source.unsplash.com/512x512/?" +
+    encodeURIComponent(prompt);
+
+  res.json({
+    success: true,
+    image: imageUrl
+  });
 });
 
 // ====== START SERVER ======
 app.listen(PORT, () => {
-  console.log("✅ Free Image Generator running on port " + PORT);
+  console.log("✅ Server running on port " + PORT);
 });
