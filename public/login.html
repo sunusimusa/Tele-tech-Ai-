@@ -1,4 +1,37 @@
- {
-app.get("/register", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "register.html"));
-});
+<script>
+async function loginUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
+
+  msg.style.color = "red";
+
+  if (!username || !password) {
+    msg.innerText = "Please fill all fields";
+    return;
+  }
+
+  try {
+    const res = await fetch("https://tele-tech-ai.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      msg.style.color = "green";
+      msg.innerText = "Login successful! Redirecting...";
+      setTimeout(() => {
+        window.location.href = "/generator.html";
+      }, 1000);
+    } else {
+      msg.innerText = data.message || "Login failed";
+    }
+
+  } catch (error) {
+    msg.innerText = "Error connecting to server";
+  }
+}
+</script>
