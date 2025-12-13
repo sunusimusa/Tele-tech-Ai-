@@ -12,26 +12,19 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req,res)=>{
   res.sendFile(path.join(__dirname,"public","login.html"));
 });
-
-app.get("/generator",(req,res)=>{
-  res.sendFile(path.join(__dirname,"public","generator.html"));
-});
-
-app.post("/generate",(req,res)=>{
+app.post("/generate", (req, res) => {
   const { prompt } = req.body;
+
   if (!prompt) {
-    return res.json({success:false});
+    return res.json({ success: false });
   }
 
-  const image = "https://source.unsplash.com/512x512/?" +
+  const imageUrl =
+    "https://source.unsplash.com/512x512/?" +
     encodeURIComponent(prompt);
 
   res.json({
-    success:true,
-    image
+    success: true,
+    image: imageUrl
   });
-});
-
-app.listen(PORT,()=>{
-  console.log("✅ Free AI running on port " + PORT);
 });
