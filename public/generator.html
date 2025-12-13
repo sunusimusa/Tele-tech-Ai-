@@ -1,35 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>AI Image Generator</title>
-</head>
-<body style="font-family:Arial; background:#f4f6f9;">
-
-<div style="max-width:500px;margin:80px auto;padding:30px;background:#fff;border-radius:10px;">
-  <h2 style="text-align:center;">AI Image Generator</h2>
-
-  <textarea id="prompt" placeholder="Describe the image you want"
-    style="width:100%;height:120px;padding:10px;"></textarea><br><br>
-
-  <button onclick="generateImage()"
-    style="width:100%;padding:12px;background:#007bff;color:#fff;border:none;">
-    Generate Image
-  </button>
-
-  <p id="msg" style="text-align:center;margin-top:15px;"></p>
-
-  <img id="img" style="max-width:100%;margin-top:20px;display:none;">
-</div>
-
 <script>
 async function generateImage() {
-  const prompt = document.getElementById("prompt").value;
+  const prompt = document.getElementById("prompt").value.trim();
   const msg = document.getElementById("msg");
-  const img = document.getElementById("img");
+  const result = document.getElementById("result");
+  const output = document.getElementById("output");
 
-  msg.innerText = "Generating...";
-  img.style.display = "none";
+  msg.innerText = "";
+  result.style.display = "none";
+
+  if (!prompt) {
+    msg.innerText = "Please enter a prompt ❗";
+    return;
+  }
+
+  msg.innerText = "Generating image... ⏳";
 
   try {
     const res = await fetch("/generate", {
@@ -41,17 +25,25 @@ async function generateImage() {
     const data = await res.json();
 
     if (data.success) {
+      // 🔥 MUHIMMI: cache busting
       output.src = data.image + "&sig=" + Date.now();
-      img.style.display = "block";
-      msg.innerText = "Done ✅";
+
+      output.onload = () => {
+        result.style.display = "block";
+        msg.innerText = "Done ✅";
+      };
+
+      output.onerror = () => {
+        msg.innerText = "Image failed to load ❌";
+      };
+
     } else {
       msg.innerText = "Failed ❌";
     }
+
   } catch (e) {
+    console.error(e);
     msg.innerText = "Server error ❌";
   }
 }
-</script>
-
-</body>
-</html>
+  </script>
