@@ -1,77 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>AI Image Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<body style="font-family: Arial; background:#f4f6f9;">
+<body style="font-family:Arial;background:#f4f6f9;">
 
-  <div style="
-    max-width: 500px;
-    margin: 80px auto;
-    padding: 30px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    text-align:center;
-  ">
+<div style="
+  max-width:500px;
+  margin:80px auto;
+  padding:30px;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,.1);
+">
 
-    <h2>AI Image Generator</h2>
+<h2 style="text-align:center;">AI Image Generator</h2>
 
-    <textarea id="prompt" placeholder="Describe the image you want..."
-      style="width:100%; height:120px; padding:10px; margin-bottom:15px;"></textarea>
+<textarea id="prompt"
+  style="width:100%;height:120px;padding:10px;"
+  placeholder="Describe your image..."></textarea>
 
-    <button onclick="generateImage()"
-      style="width:100%; padding:12px; background:#007bff; color:white; border:none; border-radius:6px;">
-      Generate Image
-    </button>
+<button onclick="generate()"
+  style="width:100%;padding:12px;margin-top:10px;
+  background:#007bff;color:#fff;border:none;border-radius:6px;">
+  Generate Image
+</button>
 
-    <p id="msg" style="margin-top:15px;"></p>
+<p id="msg" style="text-align:center;margin-top:10px;"></p>
 
-    <img id="output" style="max-width:100%; margin-top:20px; display:none; border-radius:8px;" />
+<div style="text-align:center;margin-top:15px;">
+  <img id="img" style="max-width:100%;display:none;border-radius:8px;">
+</div>
 
-  </div>
+</div>
 
-  <script>
-    async function generateImage() {
-      const prompt = document.getElementById("prompt").value.trim();
-      const msg = document.getElementById("msg");
-      const output = document.getElementById("output");
+<script>
+async function generate() {
+  const prompt = document.getElementById("prompt").value.trim();
+  const msg = document.getElementById("msg");
+  const img = document.getElementById("img");
 
-      msg.innerText = "";
-      output.style.display = "none";
+  if (!prompt) {
+    msg.innerText = "Enter a prompt";
+    return;
+  }
 
-      if (!prompt) {
-        msg.innerText = "Please enter a prompt ❗";
-        return;
-      }
+  msg.innerText = "Generating...";
+  img.style.display = "none";
 
-      msg.innerText = "Generating... ⏳";
+  try {
+    const res = await fetch("/generate", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({prompt})
+    });
 
-      try {
-        const res = await fetch("/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt })
-        });
+    const data = await res.json();
 
-        const data = await res.json();
-
-        if (data.success) {
-          output.src = data.image + "&sig=" + Date.now();
-          output.style.display = "block";
-          msg.innerText = "Done ✅";
-        } else {
-          msg.innerText = "Failed ❌";
-        }
-
-      } catch (e) {
-        msg.innerText = "Server error ❌";
-      }
+    if (data.success) {
+      img.src = data.image + "&t=" + Date.now();
+      img.onload = () => img.style.display = "block";
+      msg.innerText = "Done ✅";
+    } else {
+      msg.innerText = "Failed ❌";
     }
-  </script>
+
+  } catch (e) {
+    msg.innerText = "Server error ❌";
+  }
+}
+</script>
 
 </body>
 </html>
