@@ -15,7 +15,7 @@ const openai = new OpenAI({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ WANNAN NE AMFANI MAI MUHIMMI
+// ✅ SERVE PUBLIC FILES
 app.use(express.static(path.join(__dirname, "public")));
 
 // ===== PAGE ROUTES =====
@@ -39,11 +39,11 @@ app.get("/pricing", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "pricing.html"));
 });
 
-// ===== FREE LIMIT CONFIG =====
+// ===== FREE LIMIT (zamu yi amfani da shi daga baya) =====
 const FREE_LIMIT = 3;
 const usage = {};
 
-// ===== GENERATE IMAGE =====
+// ===== GENERATE IMAGE API =====
 app.post("/generate", async (req, res) => {
   try {
     const { prompt } = req.body;
@@ -74,4 +74,9 @@ app.post("/generate", async (req, res) => {
       message: err?.error?.message || "Image generation failed"
     });
   }
+});
+
+// ===== START SERVER =====
+app.listen(PORT, () => {
+  console.log("✅ Server running on port " + PORT);
 });
