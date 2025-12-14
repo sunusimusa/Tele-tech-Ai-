@@ -3,23 +3,27 @@ app.post("/generate", async (req, res) => {
     const { prompt } = req.body;
 
     if (!prompt) {
-      return res.json({ success: false, message: "Prompt is required" });
+      return res.json({
+        success: false,
+        message: "Prompt is required"
+      });
     }
 
     const result = await openai.images.generate({
       model: "gpt-image-1",
       prompt: prompt,
-      size: "1024x1024" // ✅ SAHIHI
+      size: "1024x1024"
     });
 
-    res.json({
+    return res.json({
       success: true,
       image: result.data[0].url
     });
 
   } catch (err) {
-    console.error(err);
-    res.json({
+    console.error("IMAGE ERROR:", err?.error || err);
+
+    return res.json({
       success: false,
       message: err?.error?.message || "Image generation failed"
     });
