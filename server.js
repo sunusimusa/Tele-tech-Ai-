@@ -61,7 +61,7 @@ app.post("/generate", async (req, res) => {
     const result = await openai.images.generate({
       model: "gpt-image-1",
       prompt,
-      size: "512x512"
+      size: size: "1024x1024"
     });
 
     usage[ip].count++;
