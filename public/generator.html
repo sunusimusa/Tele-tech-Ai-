@@ -1,34 +1,98 @@
-app.post("/generate", async (req, res) => {
-  try {
-    const { prompt } = req.body;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Image Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-    if (!prompt) {
-      return res.json({
-        success: false,
-        message: "Prompt is required"
-      });
+<body style="font-family:Arial; background:#f4f6f9;">
+
+<div style="
+  max-width:500px;
+  margin:60px auto;
+  padding:25px;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,.1);
+">
+
+  <h2 style="text-align:center;">AI Image Generator</h2>
+
+  <textarea id="prompt"
+    placeholder="Describe the image you want..."
+    style="width:100%; height:120px; padding:10px;"></textarea>
+
+  <br><br>
+
+  <button onclick="generateImage()"
+    style="width:100%; padding:12px; background:#007bff; color:white; border:none; border-radius:6px;">
+    Generate Image
+  </button>
+
+  <p id="msg" style="text-align:center; margin-top:12px;"></p>
+
+  <!-- IMAGE OUTPUT -->
+  <img id="output"
+       style="max-width:100%; display:none; margin-top:15px; border-radius:8px;"/>
+
+  <!-- UPGRADE CTA -->
+  <p id="upgrade" style="display:none; text-align:center; margin-top:15px;">
+    <a href="/pricing" style="color:#ff5722; font-weight:bold;">
+      Upgrade to Pro 🚀
+    </a>
+  </p>
+
+</div>
+
+<script>
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value.trim();
+  const msg = document.getElementById("msg");
+  const img = document.getElementById("output");
+  const upgrade = document.getElementById("upgrade");
+
+  msg.innerText = "";
+  img.style.display = "none";
+  upgrade.style.display = "none";
+
+  if (!prompt) {
+    msg.innerText = "Please enter a prompt ❌";
+    return;
+  }
+
+  msg.innerText = "Generating image... ⏳";
+
+  try {
+    const res = await fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
+
+    const data = await res.json();
+
+    // 🚫 FREE LIMIT REACHED
+    if (data.limit) {
+      msg.innerText = data.message;
+      upgrade.style.display = "block";
+      return;
     }
 
-    const result = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt: prompt,
-      size: "1024x1024"
-    });
-
-    return res.json({
-      success: true,
-      image: result.data[0].url
-    });
+    // ✅ SUCCESS
+    if (data.success) {
+      img.src = data.image + "?t=" + Date.now();
+      img.style.display = "block";
+      msg.innerText = "Done ✅";
+    } else {
+      msg.innerText = data.message || "Generation failed ❌";
+    }
 
   } catch (err) {
-    console.error("IMAGE ERROR:", err?.error || err);
-
-    return res.json({
-      success: false,
-      message: err?.error?.message || "Image generation failed"
-    });
+    msg.innerText = "Server error ❌";
   }
-});
-<p id="upgrade" style="display:none; text-align:center; margin-top:15px;">
-  <a href="/pricing">Upgrade to Pro 🚀</a>
-</p>
+}
+</script>
+
+</body>
+</html>
