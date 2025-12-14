@@ -74,7 +74,11 @@ async function generateImage() {
 
     const data = await res.json();
 
-    // 🚫 FREE LIMIT REACHED
+    // if (data.limit) {
+  msg.innerText = data.message;
+  document.getElementById("upgrade").style.display = "block";
+  return;
+}
     if (data.limit) {
       msg.innerText = data.message;
       upgrade.style.display = "block";
