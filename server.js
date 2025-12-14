@@ -71,13 +71,12 @@ app.post("/generate", async (req, res) => {
 
     // check limit
     if (usage[ip].count >= FREE_LIMIT) {
-    return res.json({
+       return res.json({
   success: false,
   limit: true,
   message: "Free limit reached. Upgrade to Pro 🚀"
 });
-      });
-    }
+    });
 
     // count +1
     usage[ip].count++;
