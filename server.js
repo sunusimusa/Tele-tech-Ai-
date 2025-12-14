@@ -1,3 +1,8 @@
+// ====== FREE LIMIT CONFIG ======
+const FREE_LIMIT = 3;
+
+// memory store (simple for now)
+const usage = {};
 // ===== IMPORTS =====
 const express = require("express");
 const cors = require("cors");
