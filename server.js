@@ -39,13 +39,47 @@ app.get("/pricing", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "pricing.html"));
 });
 
-// ===== API =====
+// ===== FREE LIMIT CONFIG =====
+const FREE_LIMIT = 3;
+const usage = {};
+
+// ===== GENERATE IMAGE =====
 app.post("/generate", async (req, res) => {
   try {
     const { prompt } = req.body;
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.socket.remoteAddress ||
+      "unknown";
+
     if (!prompt) {
-      return res.json({ success: false, message: "Prompt is required" });
+      return res.json({
+        success: false,
+        message: "Prompt is required"
+      });
     }
+
+    // init user
+    if (!usage[ip]) {
+      usage[ip] = { count: 0, date: new Date().toDateString() };
+    }
+
+    // reset daily
+    if (usage[ip].date !== new Date().toDateString()) {
+      usage[ip] = { count: 0, date: new Date().toDateString() };
+    }
+
+    // check limit
+    if (usage[ip].count >= FREE_LIMIT) {
+      return res.json({
+        success: false,
+        limit: true,
+        message: "Free limit reached. Upgrade to Pro 🚀"
+      });
+    }
+
+    // count +1
+    usage[ip].count++;
 
     const result = await openai.images.generate({
       model: "gpt-image-1",
@@ -53,13 +87,14 @@ app.post("/generate", async (req, res) => {
       size: "1024x1024"
     });
 
-    res.json({
+    return res.json({
       success: true,
       image: result.data[0].url
     });
+
   } catch (err) {
-    console.error(err);
-    res.json({
+    console.error("IMAGE ERROR:", err?.error || err);
+    return res.json({
       success: false,
       message: "Image generation failed"
     });
