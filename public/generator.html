@@ -53,17 +53,14 @@
 </button>
 
 </div>
-
 <script>
 async function generateImage() {
   const prompt = document.getElementById("prompt").value.trim();
   const msg = document.getElementById("msg");
   const img = document.getElementById("output");
-  const upgradeBtn = document.getElementById("upgradeBtn");
 
   msg.innerText = "Generating...";
   img.style.display = "none";
-  upgradeBtn.style.display = "none";
 
   if (!prompt) {
     msg.innerText = "Please enter a prompt ❌";
@@ -79,10 +76,9 @@ async function generateImage() {
 
     const data = await res.json();
 
-    // 🚫 FREE LIMIT
+    // 🔴 FREE LIMIT HIT
     if (data.limit) {
       msg.innerText = data.message;
-      upgradeBtn.style.display = "block";
       return;
     }
 
