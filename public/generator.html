@@ -43,15 +43,13 @@ async function generateImage() {
   const msg = document.getElementById("msg");
   const img = document.getElementById("output");
 
+  msg.innerText = "Generating...";
   img.style.display = "none";
-  msg.innerText = "";
 
   if (!prompt) {
     msg.innerText = "Please enter a prompt ❌";
     return;
   }
-
-  msg.innerText = "Generating... ⏳";
 
   try {
     const res = await fetch("/generate", {
@@ -62,7 +60,7 @@ async function generateImage() {
 
     const data = await res.json();
 
-    // ✅ FREE LIMIT HANDLING
+    // ✅ FREE LIMIT HANDLER
     if (data.limit) {
       msg.innerText = data.message;
       return;
@@ -73,7 +71,7 @@ async function generateImage() {
       img.style.display = "block";
       msg.innerText = "Done ✅";
     } else {
-      msg.innerText = data.message || "Generation failed ❌";
+      msg.innerText = "Generation failed ❌";
     }
 
   } catch (err) {
