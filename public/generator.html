@@ -32,7 +32,6 @@
 
 <p id="msg" style="text-align:center; margin-top:10px;"></p>
 
-<!-- ⚠️ WANNAN NE MAHIMMI -->
 <img id="output"
      style="max-width:100%; display:none; margin-top:15px; border-radius:8px;"/>
 
@@ -44,13 +43,15 @@ async function generateImage() {
   const msg = document.getElementById("msg");
   const img = document.getElementById("output");
 
-  msg.innerText = "Generating...";
   img.style.display = "none";
+  msg.innerText = "";
 
   if (!prompt) {
     msg.innerText = "Please enter a prompt ❌";
     return;
   }
+
+  msg.innerText = "Generating... ⏳";
 
   try {
     const res = await fetch("/generate", {
@@ -61,12 +62,18 @@ async function generateImage() {
 
     const data = await res.json();
 
+    // ✅ FREE LIMIT HANDLING
+    if (data.limit) {
+      msg.innerText = data.message;
+      return;
+    }
+
     if (data.success) {
       img.src = data.image + "?t=" + Date.now();
       img.style.display = "block";
       msg.innerText = "Done ✅";
     } else {
-      msg.innerText = "Generation failed ❌";
+      msg.innerText = data.message || "Generation failed ❌";
     }
 
   } catch (err) {
@@ -74,6 +81,6 @@ async function generateImage() {
   }
 }
 </script>
-{ "limit": true, "message": "Free limit reached..." }
+
 </body>
 </html>
