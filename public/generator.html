@@ -67,24 +67,23 @@ async function generateImage() {
 
     const data = await res.json();
 
-    // ✅ FREE LIMIT CHECK
-    if (data.limit) {
-      msg.innerText = data.message;
-      upgrade.style.display = "block";
-      return;
-    }
+    const data = await res.json();
 
-    if (data.success) {
-      img.src = data.image + "?t=" + Date.now();
-      img.style.display = "block";
-      msg.innerText = "Done ✅";
-    } else {
-      msg.innerText = data.message || "Image generation failed ❌";
-    }
+// 🟥 IDAN FREE LIMIT YA CIKA
+if (data.limit) {
+  msg.innerText = data.message;
+  document.getElementById("upgrade").style.display = "block";
+  return;
+}
 
-  } catch (err) {
-    msg.innerText = "Server error ❌";
-  }
+// 🟩 IDAN YA YI NASARA
+if (data.success) {
+  img.src = data.image + "?t=" + Date.now();
+  img.style.display = "block";
+  msg.innerText = "Done ✅";
+} else {
+  msg.innerText = "Generation failed ❌";
+ }
 }
 </script>
 
