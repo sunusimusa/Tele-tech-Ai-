@@ -41,7 +41,6 @@
 </p>
 
 </div>
-
 <script>
 async function generateImage() {
   const prompt = document.getElementById("prompt").value.trim();
@@ -67,23 +66,25 @@ async function generateImage() {
 
     const data = await res.json();
 
-    const data = await res.json();
+    // ✅ FREE LIMIT
+    if (data.limit) {
+      msg.innerText = data.message;
+      upgrade.style.display = "block";
+      return;
+    }
 
-// 🟥 IDAN FREE LIMIT YA CIKA
-if (data.limit) {
-  msg.innerText = data.message;
-  document.getElementById("upgrade").style.display = "block";
-  return;
-}
+    // ✅ SUCCESS
+    if (data.success) {
+      img.src = data.image + "?t=" + Date.now();
+      img.style.display = "block";
+      msg.innerText = "Done ✅";
+    } else {
+      msg.innerText = data.message || "Generation failed ❌";
+    }
 
-// 🟩 IDAN YA YI NASARA
-if (data.success) {
-  img.src = data.image + "?t=" + Date.now();
-  img.style.display = "block";
-  msg.innerText = "Done ✅";
-} else {
-  msg.innerText = "Generation failed ❌";
- }
+  } catch (err) {
+    msg.innerText = "Server error ❌";
+  }
 }
 </script>
 
