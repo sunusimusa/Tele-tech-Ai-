@@ -35,7 +35,8 @@
      style="max-width:100%; display:none; margin-top:15px; border-radius:8px;" />
 
 <p id="upgrade" style="display:none; text-align:center; margin-top:15px;">
-  <a href="/pricing">Upgrade to Pro 🚀</a>
+  <a href="/pricing">Upgrade to Pro 🚀
+</a>
 </p>
   
 </div>
@@ -65,27 +66,26 @@ async function generateImage() {
 
     const data = await res.json();
 
-    // ✅ FREE LIMIT
+    // 🔴 FREE LIMIT
     if (data.limit) {
       msg.innerText = data.message;
       upgrade.style.display = "block";
       return;
     }
 
-    // ✅ SUCCESS
+    // 🟢 SUCCESS
     if (data.success) {
       img.src = data.image + "?t=" + Date.now();
       img.style.display = "block";
       msg.innerText = "Done ✅";
     } else {
-      msg.innerText = data.message || "Generation failed ❌";
+      msg.innerText = data.message || "Image generation failed ❌";
     }
 
   } catch (err) {
     msg.innerText = "Server error ❌";
   }
 }
-</script>
-
+  </script>
 </body>
 </html>
