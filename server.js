@@ -110,7 +110,39 @@ app.post("/generate", async (req, res) => {
     });
   }
 });
+// ===== TEXT AI API =====
+app.post("/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
 
+    if (!message) {
+      return res.json({
+        success: false,
+        message: "Message is required"
+      });
+    }
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are Tele Tech AI assistant." },
+        { role: "user", content: message }
+      ]
+    });
+
+    return res.json({
+      success: true,
+      reply: completion.choices[0].message.content
+    });
+
+  } catch (err) {
+    console.error("CHAT ERROR:", err);
+    return res.json({
+      success: false,
+      message: "AI response failed"
+    });
+  }
+});
 // ===== START SERVER =====
 app.listen(PORT, () => {
   console.log("✅ Server running on port " + PORT);
