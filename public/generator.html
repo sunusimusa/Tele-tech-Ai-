@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Tele Tech AI (Chat)</title>
+  <title>Tele Tech AI (Text)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -15,21 +15,18 @@
       max-width: 600px;
       margin: 40px auto;
       background: #fff;
+      padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,.1);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      height: 80vh;
     }
 
     h2 {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
 
     #chat {
-      flex: 1;
+      height: 320px;
       overflow-y: auto;
       border: 1px solid #ddd;
       padding: 10px;
@@ -39,54 +36,64 @@
     }
 
     .user {
-      margin-bottom: 8px;
       text-align: right;
+      margin-bottom: 10px;
     }
 
     .user span {
       background: #007bff;
-      color: white;
-      padding: 6px 10px;
-      border-radius: 12px;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 15px;
       display: inline-block;
       max-width: 80%;
     }
 
     .ai {
-      margin-bottom: 8px;
       text-align: left;
+      margin-bottom: 10px;
     }
 
     .ai span {
-      background: #e9e9e9;
-      color: #000;
-      padding: 6px 10px;
-      border-radius: 12px;
+      background: #e5e5e5;
+      padding: 8px 12px;
+      border-radius: 15px;
       display: inline-block;
       max-width: 80%;
     }
 
-    .input-box {
-      display: flex;
-      gap: 6px;
-    }
-
     textarea {
-      flex: 1;
-      resize: none;
-      height: 50px;
-      padding: 8px;
+      width: 100%;
+      height: 60px;
+      padding: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
+      resize: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
     }
 
     button {
-      padding: 0 16px;
+      padding: 10px;
       border: none;
       border-radius: 6px;
-      background: #28a745;
-      color: white;
       cursor: pointer;
+      font-size: 14px;
+    }
+
+    .send {
+      background: #28a745;
+      color: #fff;
+      flex: 1;
+    }
+
+    .clear {
+      background: #dc3545;
+      color: #fff;
     }
   </style>
 </head>
@@ -96,63 +103,69 @@
 <div class="container">
   <h2>Tele Tech AI (Text)</h2>
 
-  <!-- CHAT HISTORY -->
   <div id="chat"></div>
 
-  <!-- INPUT -->
-  <div class="input-box">
-    <textarea id="msg" placeholder="Rubuta sakonka a nan..."></textarea>
-    <button onclick="sendMsg()">Send</button>
+  <textarea id="msg" placeholder="Rubuta sakonka a nan..."></textarea>
+
+  <div class="actions">
+    <button class="send" onclick="sendMsg()">Send</button>
+    <button class="clear" onclick="clearChat()">Delete chat</button>
   </div>
 </div>
 
 <script>
-  async function sendMsg() {
-    const input = document.getElementById("msg");
-    const chat = document.getElementById("chat");
-    const message = input.value.trim();
+async function sendMsg() {
+  const input = document.getElementById("msg");
+  const chat = document.getElementById("chat");
+  const message = input.value.trim();
 
-    if (!message) return;
+  if (!message) return;
 
-    // 🧍‍♂️ USER MESSAGE
-    chat.innerHTML += `
-      <div class="user">
-        <span>${message}</span>
-      </div>
+  // 🧍 User message
+  chat.innerHTML += `
+    <div class="user">
+      <span>${message}</span>
+    </div>
+  `;
+
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
+
+  // 🤖 Thinking
+  const id = "ai-" + Date.now();
+  chat.innerHTML += `
+    <div class="ai" id="${id}">
+      <span>Thinking...</span>
+    </div>
+  `;
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+
+    document.getElementById(id).innerHTML = `
+      <span>${data.success ? data.reply : "Error"}</span>
     `;
-
-    input.value = "";
     chat.scrollTop = chat.scrollHeight;
 
-    // 🤖 THINKING MESSAGE
-    const thinkingId = "thinking-" + Date.now();
-    chat.innerHTML += `
-      <div class="ai" id="${thinkingId}">
-        <span>Thinking...</span>
-      </div>
-    `;
-    chat.scrollTop = chat.scrollHeight;
-
-    try {
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      });
-
-      const data = await res.json();
-
-      document.getElementById(thinkingId).innerHTML = `
-        <span>${data.success ? data.reply : "Error ❌"}</span>
-      `;
-
-      chat.scrollTop = chat.scrollHeight;
-
-    } catch (err) {
-      document.getElementById(thinkingId).innerHTML =
-        "<span>Server error ❌</span>";
-    }
+  } catch (e) {
+    document.getElementById(id).innerHTML =
+      "<span>Server error ❌</span>";
   }
+}
+
+// 🗑️ Delete chat (idan mutum ya so)
+function clearChat() {
+  if (confirm("Kana so ka goge duk chat ɗin?")) {
+    document.getElementById("chat").innerHTML = "";
+  }
+}
 </script>
 
 </body>
