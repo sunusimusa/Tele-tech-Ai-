@@ -135,12 +135,9 @@ app.post("/chat", async (req, res) => {
       reply: completion.choices[0].message.content
     });
 
-  } catch (err) {
-    console.error("CHAT ERROR:", err);
-    return res.json({
-      success: false,
-      message: "AI response failed"
-    });
+   } catch (err) {
+    console.error(err);
+    res.json({ success: false });
   }
 });
 // ===== START SERVER =====
