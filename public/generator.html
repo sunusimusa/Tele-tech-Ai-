@@ -2,91 +2,63 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>AI Image Generator</title>
+  <title>Tele Tech AI – Text</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body style="font-family:Arial; background:#f4f6f9;">
+
+<div style="
+  max-width:600px;
+  margin:60px auto;
+  padding:20px;
+  background:#fff;
+  border-radius:8px;
+">
+
 <h2>Tele Tech AI (Text)</h2>
 
-<textarea id="msg" placeholder="Ask me anything..."
+<textarea id="msg"
+  placeholder="Ask me anything..."
   style="width:100%;height:120px;"></textarea>
 
-<button onclick="sendMsg()">Send</button>
+<br><br>
 
-<p id="reply"></p>
+<button onclick="sendMsg()"
+  style="padding:10px 20px;">
+  Send
+</button>
+
+<p id="reply" style="margin-top:15px;"></p>
+
+</div>
 
 <script>
 async function sendMsg() {
   const msg = document.getElementById("msg").value;
   const reply = document.getElementById("reply");
 
-  reply.innerText = "Thinking...";
-
-  const res = await fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
-  });
-
-  const data = await res.json();
-  reply.innerText = data.success ? data.reply : "Error";
-}
-  
-</script>
-  
-async function generateImage() {
-  const prompt = document.getElementById("prompt").value.trim();
-  const msg = document.getElementById("msg");
-  const img = document.getElementById("output");
-  const upgrade = document.getElementById("upgrade");
-
-  msg.innerText = "Generating...";
-  img.style.display = "none";
-  upgrade.style.display = "none";
-
-  if (!prompt) {
-    msg.innerText = "Please enter a prompt ❌";
+  if (!msg) {
+    reply.innerText = "Write something first ❌";
     return;
   }
 
+  reply.innerText = "Thinking...";
+
   try {
-    const res = await fetch("/generate", {
+    const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ message: msg })
     });
 
     const data = await res.json();
-
-    // 🟡 IDAN FREE LIMIT YA CIKA
-    if (data.limit) {
-      msg.innerText = data.message;
-      upgrade.style.display = "block";
-      return;
-    }
-
-    // 🟢 IDAN IMAGE YA SAMU
-    if (data.success && data.image) {
-      img.src = data.image + "?t=" + Date.now();
-      img.style.display = "block";
-      msg.innerText = "Done ✅";
-      return;
-   }
-    if (data.limit) {
-        msg.innerText = data.message;
-        document.getElementById("upgrade").style.display = "block";
-       return;
-   }
-    
-    // 🔴 SAURAN MATSALA
-    msg.innerText = data.message || "Image generation failed ❌";
-
-  } catch (err) {
-    console.error(err);
-    msg.innerText = "Server error ❌";
+    reply.innerText = data.success ? data.reply : "Error ❌";
+  } catch (e) {
+    reply.innerText = "Server error ❌";
   }
 }
- </script> 
+</script>
+
 </body>
 </html>
