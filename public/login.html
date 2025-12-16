@@ -62,11 +62,17 @@
         const data = await res.json();
 
         if (data.success) {
-          msg.style.color = "green";
-          msg.innerText = "Login successful! Redirecting...";
-          setTimeout(() => {
-            window.location.href = "/generator.html";
-          }, 1200);
+  // ✅ Ajiye login
+  localStorage.setItem("user", JSON.stringify({
+    username: data.username || username
+  }));
+
+  msg.style.color = "green";
+  msg.innerText = "Login successful! Redirecting...";
+  setTimeout(() => {
+    window.location.href = "/generator.html";
+  }, 1200);
+}
         } else {
           msg.innerText = data.message || "Login failed";
         }
