@@ -11,34 +11,32 @@
 <div style="
   max-width:600px;
   margin:60px auto;
-  padding:20px;
+  padding:30px;
   background:#fff;
-  border-radius:8px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,.1);
 ">
 
 <h2>Tele Tech AI (Text)</h2>
 
-<textarea id="msg"
-  placeholder="Ask me anything..."
+<textarea id="msg" placeholder="Ask me anything..."
   style="width:100%;height:120px;"></textarea>
 
 <br><br>
 
-<button onclick="sendMsg()"
-  style="padding:10px 20px;">
-  Send
-</button>
+<button onclick="sendMsg()">Send</button>
 
 <p id="reply" style="margin-top:15px;"></p>
 
 </div>
 
-<script> {
-  const msg = document.getElementById("msg").value;
+<script>
+async function sendMsg() {
+  const msg = document.getElementById("msg").value.trim();
   const reply = document.getElementById("reply");
 
   if (!msg) {
-    reply.innerText = "Write something first ❌";
+    reply.innerText = "Please type a message ❌";
     return;
   }
 
@@ -53,6 +51,7 @@
 
     const data = await res.json();
     reply.innerText = data.success ? data.reply : "Error ❌";
+
   } catch (e) {
     reply.innerText = "Server error ❌";
   }
