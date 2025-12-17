@@ -40,37 +40,43 @@
 </button>
 
 </div>
-
 <script>
+function addMessage(sender, text) {
+  const chat = document.getElementById("chat");
+
+  const msgDiv = document.createElement("div");
+  msgDiv.style.marginBottom = "8px";
+  msgDiv.style.padding = "8px";
+  msgDiv.style.borderRadius = "6px";
+  msgDiv.style.background =
+    sender === "You" ? "#d1e7ff" : "#f1f1f1";
+
+  msgDiv.innerHTML = `
+    <b>${sender}:</b> ${text}
+    <span
+      style="float:right;cursor:pointer;color:red;font-weight:bold;"
+      onclick="this.parentElement.remove()"
+    >❌</span>
+  `;
+
+  chat.appendChild(msgDiv);
+  chat.scrollTop = chat.scrollHeight;
+}
+
 async function sendMsg() {
   const input = document.getElementById("msg");
-  const chat = document.getElementById("chat");
   const message = input.value.trim();
-
   if (!message) return;
 
-  // USER MESSAGE
-  const userDiv = document.createElement("div");
-  userDiv.style.marginBottom = "8px";
-  userDiv.innerHTML = `
-    <b>You:</b> ${message}
-    <span onclick="this.parentElement.remove()"
-      style="color:red; cursor:pointer; margin-left:8px;">
-      🗑️
-    </span>
-  `;
-  chat.appendChild(userDiv);
-
+  // 👤 User message
+  addMessage("You", message);
   input.value = "";
-  chat.scrollTop = chat.scrollHeight;
 
-  // THINKING
-  const aiDiv = document.createElement("div");
-  aiDiv.style.marginBottom = "8px";
-  aiDiv.style.color = "gray";
-  aiDiv.innerHTML = `<b>AI:</b> Thinking...`;
-  chat.appendChild(aiDiv);
-  chat.scrollTop = chat.scrollHeight;
+  // 🤖 AI thinking
+  const thinkingId = document.createElement("div");
+  thinkingId.style.color = "gray";
+  thinkingId.innerText = "AI: Thinking...";
+  document.getElementById("chat").appendChild(thinkingId);
 
   try {
     const res = await fetch("/chat", {
@@ -80,22 +86,15 @@ async function sendMsg() {
     });
 
     const data = await res.json();
+    thinkingId.remove();
 
-    aiDiv.innerHTML = `
-      <b>AI:</b> ${data.success ? data.reply : "Error"}
-      <span onclick="this.parentElement.remove()"
-        style="color:red; cursor:pointer; margin-left:8px;">
-        🗑️
-      </span>
-    `;
+    addMessage("AI", data.success ? data.reply : "Error");
 
   } catch (e) {
-    aiDiv.innerHTML = `<b>AI:</b> Server error ❌`;
+    thinkingId.remove();
+    addMessage("AI", "Server error ❌");
   }
-
-  chat.scrollTop = chat.scrollHeight;
 }
 </script>
-
 </body>
 </html>
