@@ -73,7 +73,7 @@
     .delete {
       cursor: pointer;
       color: red;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .input-box {
@@ -98,14 +98,6 @@
       color: white;
       cursor: pointer;
     }
-
-    #upgrade {
-      display: none;
-      text-align: center;
-      margin-top: 10px;
-      color: red;
-      font-weight: bold;
-    }
   </style>
 </head>
 
@@ -116,37 +108,90 @@
 
   <div id="chat"></div>
 
-  <div id="upgrade">
-    Free limit ya cika.  
-    <a href="/pricing">Upgrade zuwa Pro 🚀</a>
-  </div>
-
   <div class="input-box">
-    <textarea id="msg" placeholder="Rubuta sakonka a nan..."></textarea>
+    <textarea id="msg" placeholder="Type your message..."></textarea>
     <button onclick="sendMsg()">Send</button>
   </div>
 </div>
 
 <script>
-  // ===== PLAN & LIMIT =====
-  <script>
-const FREE_LIMIT = 5;        // adadin sakonni
-const RESET_HOURS = 8;       // awa 8
+/* ===== FREE LIMIT CONFIG ===== */
+const FREE_LIMIT = 5;        // messages
+const RESET_HOURS = 8;       // hours
 
-// Karanta usage
+// User plan
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+const plan = user.plan || "free";
+
+// Usage tracking
 let usageData = JSON.parse(localStorage.getItem("usageData") || "{}");
-
 const now = Date.now();
 
-// Idan babu lokaci ko awa 8 ta wuce → reset
+// Reset after 8 hours
 if (!usageData.startTime || (now - usageData.startTime) > RESET_HOURS * 60 * 60 * 1000) {
-  usageData = {
-    count: 0,
-    startTime: now
-  };
+  usageData = { count: 0, startTime: now };
 }
-// Ajiye
 localStorage.setItem("usageData", JSON.stringify(usageData));
+
+function deleteMsg(el) {
+  el.parentElement.remove();
+}
+
+async function sendMsg() {
+  // 🚫 FREE LIMIT CHECK
+  if (plan === "free" && usageData.count >= FREE_LIMIT) {
+    alert("Free limit reached. Please upgrade to Pro 🚀");
+    return;
+  }
+
+  const input = document.getElementById("msg");
+  const chat = document.getElementById("chat");
+  const message = input.value.trim();
+  if (!message) return;
+
+  // USER MESSAGE
+  const userDiv = document.createElement("div");
+  userDiv.className = "msg user";
+  userDiv.innerHTML = `
+    <span class="delete" onclick="deleteMsg(this)">❌</span>
+    <div class="bubble">${message}</div>
+  `;
+  chat.appendChild(userDiv);
+
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
+
+  // AI THINKING
+  const aiDiv = document.createElement("div");
+  aiDiv.className = "msg ai";
+  aiDiv.innerHTML = `
+    <div class="bubble">Thinking...</div>
+    <span class="delete" onclick="deleteMsg(this)">❌</span>
+  `;
+  chat.appendChild(aiDiv);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+    aiDiv.querySelector(".bubble").innerText =
+      data.success ? data.reply : "Error ❌";
+
+  } catch (err) {
+    aiDiv.querySelector(".bubble").innerText = "Server error ❌";
+  }
+
+  // Increase usage
+  usageData.count++;
+  localStorage.setItem("usageData", JSON.stringify(usageData));
+
+  chat.scrollTop = chat.scrollHeight;
+}
 </script>
 
 </body>
