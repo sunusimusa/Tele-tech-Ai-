@@ -13,18 +13,19 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ===== CHAT API ===== */
+
 app.post("/chat", async (req, res) => {
-  const { message } = req.body;
-
-  if (!message) {
-    return res.json({ success: false, reply: "No message" });
-  }
-
   try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.json({ success: false, reply: "No message received" });
+    }
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "You are a helpful Hausa & English assistant." },
+        { role: "system", content: "You are a helpful Hausa assistant." },
         { role: "user", content: message }
       ]
     });
@@ -33,7 +34,7 @@ app.post("/chat", async (req, res) => {
 
     res.json({
       success: true,
-      reply
+      reply: reply
     });
 
   } catch (err) {
@@ -44,7 +45,6 @@ app.post("/chat", async (req, res) => {
     });
   }
 });
-
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
