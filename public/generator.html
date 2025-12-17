@@ -12,17 +12,19 @@ body {
 }
 .container {
   max-width: 600px;
-  margin: 40px auto;
+  margin: 30px auto;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,.1);
-  padding: 20px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  height: 80vh;
+  height: 85vh;
 }
-h2 { text-align: center; margin-bottom: 10px; }
-
+h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
 #chat {
   flex: 1;
   overflow-y: auto;
@@ -31,61 +33,62 @@ h2 { text-align: center; margin-bottom: 10px; }
   border-radius: 6px;
   background: #fafafa;
 }
-
 .msg {
   display: flex;
-  align-items: center;
   gap: 6px;
   margin-bottom: 8px;
 }
-
 .user { justify-content: flex-end; }
 .ai { justify-content: flex-start; }
-
 .bubble {
-  padding: 6px 10px;
-  border-radius: 12px;
-  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  max-width: 75%;
   word-wrap: break-word;
 }
-
 .user .bubble {
-  background: #007bff;
-  color: #fff;
+  background:#007bff;
+  color:#fff;
 }
 .ai .bubble {
-  background: #e9e9e9;
-  color: #000;
+  background:#e9e9e9;
+  color:#000;
 }
-
 .delete {
-  cursor: pointer;
-  color: red;
-  font-size: 14px;
+  cursor:pointer;
+  color:red;
+  font-size:13px;
 }
-
 .input-box {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
+  display:flex;
+  gap:6px;
+  margin-top:10px;
 }
-
 textarea {
-  flex: 1;
-  resize: none;
-  height: 50px;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  flex:1;
+  resize:none;
+  height:50px;
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
-
 button {
-  padding: 0 16px;
-  border: none;
-  border-radius: 6px;
-  background: #28a745;
-  color: white;
-  cursor: pointer;
+  background:#28a745;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:0 16px;
+  cursor:pointer;
+}
+.top-actions {
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.clear {
+  background:#dc3545;
+  padding:4px 10px;
+  font-size:12px;
 }
 </style>
 </head>
@@ -94,6 +97,11 @@ button {
 
 <div class="container">
   <h2>Tele Tech AI (Text)</h2>
+
+  <div class="top-actions">
+    <button class="clear" onclick="clearChat()">Clear All</button>
+    <small id="limitInfo"></small>
+  </div>
 
   <div id="chat"></div>
 
@@ -104,101 +112,117 @@ button {
 </div>
 
 <script>
-/* ================= CONFIG ================= */
+/* ===== CONFIG ===== */
 const FREE_LIMIT = 5;
 const RESET_HOURS = 8;
 
-/* ================= USER ================= */
+/* ===== USER ===== */
 const user = JSON.parse(localStorage.getItem("user") || "{}");
 const plan = user.plan || "free";
 
-/* ================= USAGE ================= */
-let usageData = JSON.parse(localStorage.getItem("usageData") || "{}");
+/* ===== USAGE ===== */
+let usage = JSON.parse(localStorage.getItem("usage") || "{}");
 const now = Date.now();
 
-if (!usageData.startTime || (now - usageData.startTime) > RESET_HOURS * 60 * 60 * 1000) {
-  usageData = { count: 0, startTime: now };
-  localStorage.setItem("usageData", JSON.stringify(usageData));
+if (!usage.start || (now - usage.start) > RESET_HOURS * 60 * 60 * 1000) {
+  usage = { count: 0, start: now };
+  localStorage.setItem("usage", JSON.stringify(usage));
 }
 
-/* ================= CHAT STORAGE ================= */
+/* ===== CHAT STORAGE ===== */
 function loadChat() {
   const chat = document.getElementById("chat");
   const saved = JSON.parse(localStorage.getItem("chatHistory") || "[]");
   chat.innerHTML = "";
-
-  saved.forEach((m, i) => {
-    chat.innerHTML += `
-      <div class="msg ${m.role}">
-        <span class="delete" onclick="deleteMsg(${i})">❌</span>
-        <div class="bubble">${m.text}</div>
-      </div>
-    `;
-  });
-
+  saved.forEach(m => renderMsg(m.role, m.text, false));
   chat.scrollTop = chat.scrollHeight;
 }
 
-function saveMessage(role, text) {
+function saveMsg(role, text) {
   const saved = JSON.parse(localStorage.getItem("chatHistory") || "[]");
   saved.push({ role, text });
   localStorage.setItem("chatHistory", JSON.stringify(saved));
 }
 
-function deleteMsg(index) {
+function deleteMsg(el) {
+  const div = el.parentElement;
+  const text = div.querySelector(".bubble").innerText;
+  const role = div.classList.contains("user") ? "user" : "ai";
   let saved = JSON.parse(localStorage.getItem("chatHistory") || "[]");
-  saved.splice(index, 1);
+  saved = saved.filter(m => !(m.role === role && m.text === text));
   localStorage.setItem("chatHistory", JSON.stringify(saved));
-  loadChat();
+  div.remove();
 }
 
-/* ================= SEND MESSAGE ================= */
+function clearChat() {
+  if (!confirm("Delete all chats?")) return;
+  localStorage.removeItem("chatHistory");
+  document.getElementById("chat").innerHTML = "";
+}
+
+/* ===== UI ===== */
+function renderMsg(role, text, save=true) {
+  const chat = document.getElementById("chat");
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <span class="delete" onclick="deleteMsg(this)">❌</span>
+    <div class="bubble">${text}</div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  if (save) saveMsg(role, text);
+}
+
+/* ===== SEND ===== */
 async function sendMsg() {
   const input = document.getElementById("msg");
   const message = input.value.trim();
   if (!message) return;
 
-  if (plan === "free" && usageData.count >= FREE_LIMIT) {
+  if (plan === "free" && usage.count >= FREE_LIMIT) {
     alert("Free limit reached. Please upgrade to Pro 🚀");
     return;
   }
 
-  saveMessage("user", message);
+  renderMsg("user", message);
   input.value = "";
-  loadChat();
 
-  saveMessage("ai", "Thinking...");
-  loadChat();
+  const thinking = "thinking-" + Date.now();
+  renderMsg("ai", "Thinking...", false);
+  const lastAI = document.querySelectorAll(".ai .bubble");
+  const aiBubble = lastAI[lastAI.length - 1];
 
   try {
     const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message })
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ message })
     });
-
     const data = await res.json();
-
-    let saved = JSON.parse(localStorage.getItem("chatHistory"));
-    saved[saved.length - 1].text =
-      data.success ? data.reply : "Error ❌";
-    localStorage.setItem("chatHistory", JSON.stringify(saved));
-
-    usageData.count++;
-    localStorage.setItem("usageData", JSON.stringify(usageData));
-
-    loadChat();
-
+    aiBubble.innerText = data.success ? data.reply : "Error ❌";
+    saveMsg("ai", aiBubble.innerText);
+    usage.count++;
+    localStorage.setItem("usage", JSON.stringify(usage));
   } catch {
-    let saved = JSON.parse(localStorage.getItem("chatHistory"));
-    saved[saved.length - 1].text = "Server error ❌";
-    localStorage.setItem("chatHistory", JSON.stringify(saved));
-    loadChat();
+    aiBubble.innerText = "Server error ❌";
+  }
+
+  updateLimitInfo();
+}
+
+function updateLimitInfo() {
+  const el = document.getElementById("limitInfo");
+  if (plan === "free") {
+    el.innerText = `Free: ${usage.count}/${FREE_LIMIT}`;
+  } else {
+    el.innerText = "Pro User 🚀";
   }
 }
 
-/* ================= INIT ================= */
+/* ===== INIT ===== */
 loadChat();
+updateLimitInfo();
 </script>
 
 </body>
