@@ -45,8 +45,13 @@
       gap: 6px;
     }
 
-    .user { justify-content: flex-end; }
-    .ai { justify-content: flex-start; }
+    .user {
+      justify-content: flex-end;
+    }
+
+    .ai {
+      justify-content: flex-start;
+    }
 
     .bubble {
       padding: 6px 10px;
@@ -68,7 +73,7 @@
     .delete {
       cursor: pointer;
       color: red;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .input-box {
@@ -110,86 +115,78 @@
 </div>
 
 <script>
-/* ===== PLAN & FREE LIMIT CONFIG ===== */
-const FREE_LIMIT = 5;
-const RESET_HOURS = 8;
+  /* ===== PLAN & FREE LIMIT ===== */
+  const FREE_LIMIT = 5;       // messages
+  const RESET_HOURS = 8;      // hours
 
-// user plan
-const user = JSON.parse(localStorage.getItem("user") || "{}");
-const plan = user.plan || "free";
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const plan = user.plan || "free";
 
-// usage data
-let usageData = JSON.parse(localStorage.getItem("usageData") || "{}");
-const now = Date.now();
+  let usageData = JSON.parse(localStorage.getItem("usageData") || "{}");
+  const now = Date.now();
 
-// reset after 8 hours
-if (!usageData.startTime || (now - usageData.startTime) > RESET_HOURS * 60 * 60 * 1000) {
-  usageData = { count: 0, startTime: now };
-}
-localStorage.setItem("usageData", JSON.stringify(usageData));
-
-/* ===== DELETE MESSAGE ===== */
-function deleteMsg(el) {
-  el.parentElement.remove();
-}
-
-/* ===== SEND MESSAGE ===== */
-async function sendMsg() {
-  // free limit check
-  if (plan === "free" && usageData.count >= FREE_LIMIT) {
-    alert("Free limit reached. Please upgrade to Pro 🚀");
-    return;
+  // Reset after 8 hours
+  if (!usageData.startTime || (now - usageData.startTime) > RESET_HOURS * 60 * 60 * 1000) {
+    usageData = { count: 0, startTime: now };
   }
 
-  const input = document.getElementById("msg");
-  const chat = document.getElementById("chat");
-  const message = input.value.trim();
-
-  if (!message) return;
-
-  // user message
-  const userDiv = document.createElement("div");
-  userDiv.className = "msg user";
-  userDiv.innerHTML = `
-    <span class="delete" onclick="deleteMsg(this)">❌</span>
-    <div class="bubble">${message}</div>
-  `;
-  chat.appendChild(userDiv);
-
-  input.value = "";
-  chat.scrollTop = chat.scrollHeight;
-
-  // thinking message
-  const aiDiv = document.createElement("div");
-  aiDiv.className = "msg ai";
-  aiDiv.innerHTML = `
-    <div class="bubble">Thinking...</div>
-    <span class="delete" onclick="deleteMsg(this)">❌</span>
-  `;
-  chat.appendChild(aiDiv);
-  chat.scrollTop = chat.scrollHeight;
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message })
-    });
-
-    const data = await res.json();
-    aiDiv.querySelector(".bubble").innerText =
-      data.success ? data.reply : "Error ❌";
-
-  } catch (err) {
-    aiDiv.querySelector(".bubble").innerText = "Server error ❌";
+  function deleteMsg(el) {
+    el.parentElement.remove();
   }
 
-  // increase usage
-  usageData.count++;
-  localStorage.setItem("usageData", JSON.stringify(usageData));
+  async function sendMsg() {
+    const input = document.getElementById("msg");
+    const chat = document.getElementById("chat");
+    const message = input.value.trim();
 
-  chat.scrollTop = chat.scrollHeight;
-}
+    if (!message) return;
+
+    // 🚫 FREE LIMIT CHECK
+    if (plan === "free" && usageData.count >= FREE_LIMIT) {
+      alert("Free limit reached. Please upgrade to Pro 🚀");
+      return;
+    }
+
+    usageData.count++;
+    localStorage.setItem("usageData", JSON.stringify(usageData));
+
+    // USER MESSAGE
+    const userDiv = document.createElement("div");
+    userDiv.className = "msg user";
+    userDiv.innerHTML = `
+      <span class="delete" onclick="deleteMsg(this)">❌</span>
+      <div class="bubble">${message}</div>
+    `;
+    chat.appendChild(userDiv);
+
+    input.value = "";
+    chat.scrollTop = chat.scrollHeight;
+
+    // AI THINKING
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "msg ai";
+    aiDiv.innerHTML = `
+      <div class="bubble">Thinking...</div>
+      <span class="delete" onclick="deleteMsg(this)">❌</span>
+    `;
+    chat.appendChild(aiDiv);
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+      aiDiv.querySelector(".bubble").innerText =
+        data.success ? data.reply : "Error ❌";
+
+    } catch (err) {
+      aiDiv.querySelector(".bubble").innerText = "Server error ❌";
+    }
+  }
 </script>
 
 </body>
