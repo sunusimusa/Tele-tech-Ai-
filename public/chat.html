@@ -75,11 +75,45 @@ saved.forEach(addToChat);
 /* SEND BUTTON */
 sendBtn.onclick = sendMsg;
 
-async function sendMsg(// 🚫 FREE LIMIT CHECK
-if (plan === "free" && usage.count >= FREE_LIMIT) {
-  alert("Free limit reached (10 messages/day). Upgrade to Pro 🚀");
-  return;
-  }) {
+async function sendMsg() {async function sendMsg() {
+
+  // 🚫 FREE LIMIT CHECK (A FARKO)
+  if (plan === "free" && usage.count >= FREE_LIMIT) {
+    alert("Free limit reached (10 messages/day). Upgrade to Pro 🚀");
+    return;
+  }
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  const userMsg = { role: "You", text };
+  saveMsg(userMsg);
+  addToChat(userMsg);
+  input.value = "";
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+    const aiMsg = { role: "AI", text: data.reply || "Error" };
+
+    saveMsg(aiMsg);
+    addToChat(aiMsg);
+
+    // ✅ ƙara count bayan nasara
+    usage.count++;
+    localStorage.setItem("usage", JSON.stringify(usage));
+
+  } catch {
+    const aiMsg = { role: "AI", text: "Server error" };
+    saveMsg(aiMsg);
+    addToChat(aiMsg);
+  }
+}
   const text = input.value.trim();
   if (!text) return;
 
