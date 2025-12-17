@@ -38,7 +38,7 @@ body { font-family: Arial; background:#f4f6f9; }
   <div id="chat"></div>
 
   <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
-  <button onclick="sendMsg()">Send</button>
+  <button type="button" onclick="sendMsg()">Send</button>
 </div>
 
 <script>
@@ -46,7 +46,11 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 
 /* LOAD CHAT */
-chat.innerHTML = localStorage.getItem("chatHistory") || "";
+const saved = JSON.parse(localStorage.getItem("chatData") || "[]");
+
+saved.forEach(msg => {
+  addToChat(msg);
+});
 
 async function sendMsg() {
   const text = input.value.trim();
