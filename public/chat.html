@@ -8,30 +8,29 @@
 <style>
 body {
   font-family: Arial;
-  background: #f4f6f9;
+  background:#f4f6f9;
 }
 .box {
-  max-width: 600px;
-  margin: 30px auto;
-  background: #fff;
-  padding: 15px;
-  border-radius: 8px;
+  max-width:600px;
+  margin:30px auto;
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
 }
 #chat {
-  min-height: 300px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  margin-bottom: 10px;
+  min-height:300px;
+  border:1px solid #ccc;
+  padding:10px;
+  margin-bottom:10px;
+  overflow-y:auto;
 }
-.msg {
-  margin-bottom: 6px;
-}
-.user { color: #007bff; }
-.ai { color: #000; }
+.msg { margin-bottom:6px; }
+.user { color:#007bff; }
+.ai { color:#000; }
 .delete {
-  color: red;
-  cursor: pointer;
-  margin-left: 6px;
+  color:red;
+  cursor:pointer;
+  margin-left:6px;
 }
 </style>
 </head>
@@ -45,53 +44,50 @@ body {
 
   <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
   <button id="sendBtn">Send</button>
-  
 </div>
-  <script>
-/* PLAN & LIMIT */
+
+<script>
+/* ===== PLAN & LIMIT ===== */
 const FREE_LIMIT = 10;
-const user = JSON.parse(localStorage.getItem("user") 
-|| "{}");
+
+// user
+const user = JSON.parse(localStorage.getItem("user") || "{}");
 const plan = user.plan || "free";
 
-let usage = JSON.parse(localStorage.getItem("usage") 
-|| "{}");
+// usage per day
+let usage = JSON.parse(localStorage.getItem("usage") || "{}");
 const today = new Date().toDateString();
 
 if (usage.date !== today) {
   usage = { count: 0, date: today };
-  localStorage.setItem("usage", 
-JSON.stringify(usage));
+  localStorage.setItem("usage", JSON.stringify(usage));
 }
 
-const chat = 
-document.getElementById("chat");
-const input = 
-document.getElementById("msg");
-const sendBtn = 
-document.getElementById("sendBtn");
+/* ===== ELEMENTS ===== */
+const chat = document.getElementById("chat");
+const input = document.getElementById("msg");
+const sendBtn = document.getElementById("sendBtn");
 
-sendBtn.onclick = sendMsg;
-</script>
-  
-/* LOAD SAVED CHAT */
+/* ===== LOAD SAVED CHAT ===== */
 const saved = JSON.parse(localStorage.getItem("chatData") || "[]");
 saved.forEach(addToChat);
 
-/* SEND BUTTON */
+/* ===== SEND BUTTON ===== */
 sendBtn.onclick = sendMsg;
 
-  async function sendMsg() {
+/* ===== SEND MESSAGE ===== */
+async function sendMsg() {
 
-  // 🚫 FREE LIMIT CHECK (A FARKO)
+  // 🚫 free limit
   if (plan === "free" && usage.count >= FREE_LIMIT) {
     alert("Free limit reached (10 messages/day). Upgrade to Pro 🚀");
     return;
   }
 
   const text = input.value.trim();
-  if (!text) return;  
-    
+  if (!text) return;
+
+  // user msg
   const userMsg = { role: "You", text };
   saveMsg(userMsg);
   addToChat(userMsg);
@@ -99,58 +95,28 @@ sendBtn.onclick = sendMsg;
 
   try {
     const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": 
-  "application/json" },
-      body: JSON.stringify({ message:
-  text })
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ message:text })
     });
 
     const data = await res.json();
-    const aiMsg = { role: "AI", text:
-  data.reply || "Error" };
+    const aiMsg = { role:"AI", text: data.reply || "Error" };
 
     saveMsg(aiMsg);
     addToChat(aiMsg);
 
     usage.count++;
-    localStorage.setItem("usage", 
-  JSON.stringify(usage));
+    localStorage.setItem("usage", JSON.stringify(usage));
 
   } catch {
-    const aiMsg = { role: "AI", text: 
- "Server error" };
-    saveMsg(aiMsg);
-    addToChat(aiMsg);
-  }
-    
-  const userMsg = { role: "You", text };
-  saveMsg(userMsg);
-  addToChat(userMsg);
-  input.value = "";
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    const data = await res.json();
-    const aiMsg = { role: "AI", text: data.reply || "Error" };
-    saveMsg(aiMsg);// Ƙara usage
-usage.count++;
-localStorage.setItem("usage", JSON.stringify(usage));
-    addToChat(aiMsg);
-
-  } catch {
-    const aiMsg = { role: "AI", text: "Server error" };
+    const aiMsg = { role:"AI", text:"Server error" };
     saveMsg(aiMsg);
     addToChat(aiMsg);
   }
 }
 
-/* SHOW MESSAGE */
+/* ===== ADD TO UI ===== */
 function addToChat(msg) {
   const div = document.createElement("div");
   div.className = "msg " + (msg.role === "You" ? "user" : "ai");
@@ -162,17 +128,17 @@ function addToChat(msg) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-/* SAVE */
+/* ===== SAVE CHAT ===== */
 function saveMsg(msg) {
   const data = JSON.parse(localStorage.getItem("chatData") || "[]");
   data.push(msg);
   localStorage.setItem("chatData", JSON.stringify(data));
 }
 
-/* DELETE ONE */
+/* ===== DELETE ONE MESSAGE ===== */
 function deleteMsg(el) {
   const div = el.parentElement;
-  const text = div.innerText.replace("❌", "").trim();
+  const text = div.innerText.replace("❌","").trim();
 
   let data = JSON.parse(localStorage.getItem("chatData") || "[]");
   data = data.filter(m => !text.includes(m.text));
