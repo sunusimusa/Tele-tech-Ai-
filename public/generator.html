@@ -45,13 +45,8 @@
       gap: 6px;
     }
 
-    .user {
-      justify-content: flex-end;
-    }
-
-    .ai {
-      justify-content: flex-start;
-    }
+    .user { justify-content: flex-end; }
+    .ai { justify-content: flex-start; }
 
     .bubble {
       padding: 6px 10px;
@@ -115,30 +110,32 @@
 </div>
 
 <script>
-/* ===== FREE LIMIT CONFIG ===== */
-const FREE_LIMIT = 5;        // messages
-const RESET_HOURS = 8;       // hours
+/* ===== PLAN & FREE LIMIT CONFIG ===== */
+const FREE_LIMIT = 5;
+const RESET_HOURS = 8;
 
-// User plan
+// user plan
 const user = JSON.parse(localStorage.getItem("user") || "{}");
 const plan = user.plan || "free";
 
-// Usage tracking
+// usage data
 let usageData = JSON.parse(localStorage.getItem("usageData") || "{}");
 const now = Date.now();
 
-// Reset after 8 hours
+// reset after 8 hours
 if (!usageData.startTime || (now - usageData.startTime) > RESET_HOURS * 60 * 60 * 1000) {
   usageData = { count: 0, startTime: now };
 }
 localStorage.setItem("usageData", JSON.stringify(usageData));
 
+/* ===== DELETE MESSAGE ===== */
 function deleteMsg(el) {
   el.parentElement.remove();
 }
 
+/* ===== SEND MESSAGE ===== */
 async function sendMsg() {
-  // 🚫 FREE LIMIT CHECK
+  // free limit check
   if (plan === "free" && usageData.count >= FREE_LIMIT) {
     alert("Free limit reached. Please upgrade to Pro 🚀");
     return;
@@ -147,9 +144,10 @@ async function sendMsg() {
   const input = document.getElementById("msg");
   const chat = document.getElementById("chat");
   const message = input.value.trim();
+
   if (!message) return;
 
-  // USER MESSAGE
+  // user message
   const userDiv = document.createElement("div");
   userDiv.className = "msg user";
   userDiv.innerHTML = `
@@ -161,7 +159,7 @@ async function sendMsg() {
   input.value = "";
   chat.scrollTop = chat.scrollHeight;
 
-  // AI THINKING
+  // thinking message
   const aiDiv = document.createElement("div");
   aiDiv.className = "msg ai";
   aiDiv.innerHTML = `
@@ -186,7 +184,7 @@ async function sendMsg() {
     aiDiv.querySelector(".bubble").innerText = "Server error ❌";
   }
 
-  // Increase usage
+  // increase usage
   usageData.count++;
   localStorage.setItem("usageData", JSON.stringify(usageData));
 
