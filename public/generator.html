@@ -115,7 +115,13 @@
     <button onclick="sendMsg()">Send</button>
   </div>
 </div>
+let usage = parseInt(localStorage.getItem("usage") || "0");
+const FREE_LIMIT = 5;
 
+// duba plan
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+const plan = user.plan || "free";
+  
 <script>
   function deleteMsg(el) {
     el.parentElement.remove();
@@ -168,6 +174,9 @@
     chat.scrollTop = chat.scrollHeight;
   }
 </script>
-
+if (plan === "free" && usage >= FREE_LIMIT) {
+  alert("Free limit ya cika. Ka upgrade zuwa Pro 🚀");
+  return;
+}
 </body>
 </html>
