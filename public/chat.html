@@ -6,43 +6,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f9;
-}
-
+body { font-family: Arial; background:#f4f6f9; }
 .box {
-  max-width: 600px;
-  margin: 30px auto;
-  background: #fff;
-  padding: 15px;
-  border-radius: 8px;
+  max-width:600px;
+  margin:40px auto;
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
 }
-
 #chat {
-  border: 1px solid #ccc;
-  min-height: 300px;
-  padding: 10px;
-  margin-bottom: 10px;
+  min-height:300px;
+  border:1px solid #ccc;
+  padding:10px;
+  margin-bottom:10px;
 }
-
-.msg {
-  margin-bottom: 8px;
-}
-
-.user {
-  color: #007bff;
-}
-
-.ai {
-  color: #000;
-}
-
+.msg { margin-bottom:8px; }
+.user { color:#007bff; }
+.ai { color:#000; }
 .delete {
-  color: red;
-  cursor: pointer;
-  font-weight: bold;
-  margin-left: 6px;
+  color:red;
+  cursor:pointer;
+  margin-left:6px;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -54,24 +39,45 @@ body {
 
   <div id="chat"></div>
 
-  <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
+  <input id="msg" placeholder="Type your message..." style="width:75%">
   <button onclick="sendMsg()">Send</button>
 </div>
 
 <script>
+/* ===== FREE / PRO CONFIG ===== */
+const FREE_LIMIT = 10; // free = 10 messages per day
+
+/* ===== LOAD USER ===== */
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+const plan = user.plan || "free";
+
+/* ===== USAGE (PER DAY) ===== */
+let usage = JSON.parse(localStorage.getItem("usage") || "{}");
+const today = new Date().toDateString();
+
+if (!usage.date || usage.date !== today) {
+  usage = { date: today, count: 0 };
+  localStorage.setItem("usage", JSON.stringify(usage));
+}
+
+/* ===== CHAT STORAGE ===== */
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 
-/* LOAD CHAT */
-const saved = JSON.parse(localStorage.getItem("chatData") || "[]");
-saved.forEach(addToChat);
+loadChat();
 
-/* SEND MESSAGE */
+/* ===== SEND MESSAGE ===== */
 async function sendMsg() {
   const text = input.value.trim();
   if (!text) return;
 
-  const userMsg = { role: "You", text };
+  // 🚫 FREE LIMIT CHECK
+  if (plan === "free" && usage.count >= FREE_LIMIT) {
+    alert("Free limit reached. Upgrade to Pro 🚀");
+    return;
+  }
+
+  const userMsg = { role:"You", text };
   saveMsg(userMsg);
   addToChat(userMsg);
 
@@ -79,46 +85,56 @@ async function sendMsg() {
 
   try {
     const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ message:text })
     });
 
     const data = await res.json();
 
-    const aiMsg = { role: "AI", text: data.reply || "Error" };
+    const aiMsg = { role:"AI", text: data.reply || "Error" };
     saveMsg(aiMsg);
     addToChat(aiMsg);
 
+    usage.count++;
+    localStorage.setItem("usage", JSON.stringify(usage));
+
   } catch {
-    const aiMsg = { role: "AI", text: "Server error" };
+    const aiMsg = { role:"AI", text:"Server error" };
     saveMsg(aiMsg);
     addToChat(aiMsg);
   }
 }
 
-/* ADD MESSAGE TO UI */
+/* ===== UI ===== */
 function addToChat(msg) {
   const div = document.createElement("div");
-  div.className = `msg ${msg.role === "You" ? "user" : "ai"}`;
+  div.className = "msg " + (msg.role === "You" ? "user" : "ai");
   div.innerHTML = `
     <b>${msg.role}:</b> ${msg.text}
     <span class="delete" onclick="deleteMsg(this)">❌</span>
   `;
   chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-/* SAVE MESSAGE */
+/* ===== STORAGE ===== */
 function saveMsg(msg) {
   const data = JSON.parse(localStorage.getItem("chatData") || "[]");
   data.push(msg);
   localStorage.setItem("chatData", JSON.stringify(data));
 }
 
-/* DELETE ONE MESSAGE */
+function loadChat() {
+  const data = JSON.parse(localStorage.getItem("chatData") || "[]");
+  chat.innerHTML = "";
+  data.forEach(addToChat);
+}
+
+/* ===== DELETE ONE MESSAGE ===== */
 function deleteMsg(el) {
   const msgDiv = el.parentElement;
-  const text = msgDiv.innerText.replace("❌", "").trim();
+  const text = msgDiv.innerText.replace("❌","").trim();
 
   let data = JSON.parse(localStorage.getItem("chatData") || "[]");
   data = data.filter(m => !text.includes(m.text));
