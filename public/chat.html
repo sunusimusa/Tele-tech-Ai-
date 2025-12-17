@@ -68,7 +68,7 @@ if (usage.date !== today) {
 
 const chat = 
 document.getElementById("chat");
-const inpt = 
+const input = 
 document.getElementById("msg");
 const sendBtn = 
 document.getElementById("sendBtn"); 
@@ -90,8 +90,7 @@ sendBtn.onclick = sendMsg;
   }
 
   const text = input.value.trim();
-  if (!text) return;
-  }  
+  if (!text) return;  
     
   const userMsg = { role: "You", text };
   saveMsg(userMsg);
@@ -124,7 +123,7 @@ sendBtn.onclick = sendMsg;
   const text = input.value.trim();
   if (!text) return;
 
-  const userMsg = { role: "You", text };
+  const (userMsg) = { role: "You", text };
   saveMsg(userMsg);
   addToChat(userMsg);
   input.value = "";
