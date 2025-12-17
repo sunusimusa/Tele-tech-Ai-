@@ -45,24 +45,23 @@ body {
 
   <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
   <button id="sendBtn">Send</button>
-</div>
   
-//PLAN & LIMIT
+</div>
+  <script>
+/* PLAN & LIMIT */
 const FREE_LIMIT = 10;
-const user = 
-JSON.parse(localStorage.getItem("user")
+const user = JSON.parse(localStorage.getItem("user") 
 || "{}");
 const plan = user.plan || "free";
 
-// Karanta usage
-let usage = 
-JSON.parse(localStorage.getItem("usage") || "{}");
+let usage = JSON.parse(localStorage.getItem("usage") 
+|| "{}");
 const today = new Date().toDateString();
 
-// Reset idan sabuwar rana
 if (usage.date !== today) {
   usage = { count: 0, date: today };
-  localStorage.setItem("usage", JSON.stringify(usage));
+  localStorage.setItem("usage", 
+JSON.stringify(usage));
 }
 
 const chat = 
@@ -70,8 +69,10 @@ document.getElementById("chat");
 const input = 
 document.getElementById("msg");
 const sendBtn = 
-document.getElementById("sendBtn"); 
-<script>
+document.getElementById("sendBtn");
+
+sendBtn.onclick = sendMsg;
+</script>
   
 /* LOAD SAVED CHAT */
 const saved = JSON.parse(localStorage.getItem("chatData") || "[]");
