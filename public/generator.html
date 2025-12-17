@@ -4,131 +4,137 @@
 <meta charset="UTF-8">
 <title>Tele Tech AI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body{
-  font-family: Arial, sans-serif;
-  background:#eef2f7;
-  margin:0;
-}
-.container{
-  max-width:650px;
-  margin:20px auto;
-  background:#fff;
-  border-radius:10px;
-  box-shadow:0 0 12px rgba(0,0,0,.1);
-  padding:15px;
-}
-h2{text-align:center;margin:10px 0;}
-.section{margin-bottom:20px;}
-textarea,input{
-  width:100%;
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  box-sizing:border-box;
-}
-button{
-  width:100%;
-  padding:10px;
-  background:#007bff;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  margin-top:8px;
-}
-#chat{
-  max-height:260px;
-  overflow-y:auto;
-  border:1px solid #ddd;
-  padding:10px;
-  border-radius:6px;
-  background:#fafafa;
-}
-.msg{margin-bottom:8px;}
-.user{color:#007bff;font-weight:bold;}
-.ai{color:#333;}
-img{
-  max-width:100%;
-  margin-top:10px;
-  border-radius:8px;
-  display:none;
-}
-.small{
-  font-size:13px;
-  color:#666;
-  text-align:center;
-}
-</style>
 </head>
 
-<body>
-<div class="container">
+<body style="font-family:Arial;background:#f4f6f9;margin:0;padding:10px;">
 
-<h2>Tele Tech AI</h2>
+<h3 style="text-align:center;">Tele Tech AI</h3>
 
-<!-- ===== TEXT CHAT ===== -->
-<div class="section">
-  <h3>💬 Chat</h3>
-  <div id="chat"></div>
-  <textarea id="chatInput" placeholder="Ask me anything..."></textarea>
-  <button onclick="sendChat()">Send</button>
-</div>
+<div id="chat" style="
+  height:60vh;
+  overflow-y:auto;
+  background:#fff;
+  padding:10px;
+  border:1px solid #ccc;
+  border-radius:6px;
+"></div>
 
-<!-- ===== IMAGE GENERATOR ===== -->
-<div class="section">
-  <h3>🖼 Image Generator</h3>
-  <input id="imgPrompt" placeholder="Describe the image you want">
-  <button onclick="generateImage()">Generate Image</button>
-  <img id="imgResult">
-</div>
+<textarea id="msg"
+  placeholder="Type your message..."
+  style="width:100%;height:60px;margin-top:6px;"></textarea>
 
-<p class="small">Free plan limited • Pro coming soon 🚀</p>
+<button onclick="sendMsg()"
+  style="width:100%;margin-top:6px;padding:10px;">
+Send</button>
 
-</div>
+<p id="info" style="text-align:center;color:red;"></p>
+
+<hr>
+
+<input id="prompt"
+  placeholder="Describe image (optional)"
+  style="width:100%;margin-top:6px;">
+
+<button onclick="generateImage()"
+  style="width:100%;margin-top:6px;padding:10px;">
+Generate Image</button>
+
+<img id="img" style="max-width:100%;display:none;margin-top:10px;">
 
 <script>
-/* ===== CHAT ===== */
-async function sendChat(){
-  const input=document.getElementById("chatInput");
+/* ===== FREE LIMIT ===== */
+const FREE_LIMIT = 5;
+const RESET_HOURS = 8;
+const user = JSON.parse(localStorage.getItem("user")||"{}");
+const plan = user.plan || "free";
+
+let usage = JSON.parse(localStorage.getItem("usage")||"{}");
+const now = Date.now();
+if(!usage.start || now-usage.start > RESET_HOURS*3600000){
+  usage={count:0,start:now};
+}
+localStorage.setItem("usage",JSON.stringify(usage));
+
+/* ===== CHAT STORAGE ===== */
+function loadChat(){
   const chat=document.getElementById("chat");
-  const msg=input.value.trim();
-  if(!msg)return;
+  const saved=JSON.parse(localStorage.getItem("chatHistory")||"[]");
+  chat.innerHTML="";
+  saved.forEach((m,i)=>{
+    chat.innerHTML+=`
+      <div>
+        <b>${m.role}:</b> ${m.text}
+        <span style="color:red;cursor:pointer;"
+          onclick="deleteMsg(${i})"> ❌</span>
+      </div>`;
+  });
+}
+loadChat();
 
-  chat.innerHTML+=`<div class="msg"><span class="user">You:</span> ${msg}</div>`;
-  input.value="";
-  chat.scrollTop=chat.scrollHeight;
+function saveMsg(role,text){
+  const saved=JSON.parse(localStorage.getItem("chatHistory")||"[]");
+  saved.push({role,text});
+  localStorage.setItem("chatHistory",JSON.stringify(saved));
+}
 
-  chat.innerHTML+=`<div class="msg ai" id="thinking">AI: Thinking...</div>`;
-  chat.scrollTop=chat.scrollHeight;
+function deleteMsg(i){
+  const saved=JSON.parse(localStorage.getItem("chatHistory")||"[]");
+  saved.splice(i,1);
+  localStorage.setItem("chatHistory",JSON.stringify(saved));
+  loadChat();
+}
+
+/* ===== SEND TEXT ===== */
+async function sendMsg(){
+  const msg=document.getElementById("msg");
+  const info=document.getElementById("info");
+  if(!msg.value.trim()) return;
+
+  if(plan==="free" && usage.count>=FREE_LIMIT){
+    info.innerText="Free limit reached. Upgrade to Pro 🚀";
+    return;
+  }
+
+  saveMsg("You",msg.value);
+  loadChat();
+  msg.value="";
+
+  saveMsg("AI","Thinking...");
+  loadChat();
 
   try{
     const res=await fetch("/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({message:msg})
+      body:JSON.stringify({message:msg.value})
     });
     const data=await res.json();
-    document.getElementById("thinking").innerHTML=
-      `<span class="ai">AI:</span> ${data.success?data.reply:"Error"}`;
+    const saved=JSON.parse(localStorage.getItem("chatHistory"));
+    saved[saved.length-1].text=data.success?data.reply:"Error";
+    localStorage.setItem("chatHistory",JSON.stringify(saved));
   }catch{
-    document.getElementById("thinking").innerText="AI: Server error";
+    const saved=JSON.parse(localStorage.getItem("chatHistory"));
+    saved[saved.length-1].text="Server error";
+    localStorage.setItem("chatHistory",JSON.stringify(saved));
   }
+
+  usage.count++;
+  localStorage.setItem("usage",JSON.stringify(usage));
+  loadChat();
 }
 
 /* ===== IMAGE ===== */
 async function generateImage(){
-  const prompt=document.getElementById("imgPrompt").value.trim();
-  const img=document.getElementById("imgResult");
-  if(!prompt)return alert("Enter image description");
-
+  const p=document.getElementById("prompt").value.trim();
+  if(!p) return;
+  const img=document.getElementById("img");
   img.style.display="none";
 
   try{
     const res=await fetch("/generate",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({prompt})
+      body:JSON.stringify({prompt:p})
     });
     const data=await res.json();
     if(data.success){
