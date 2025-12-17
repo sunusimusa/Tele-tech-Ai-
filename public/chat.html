@@ -6,19 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; background:#f4f6f9; }
-.msg {
-  margin-bottom: 6px;
-}
-.delete {
-  color: red;
-  cursor: pointer;
-  margin-left: 6px;
-  font-weight: bold;
+body {
+  font-family: Arial;
+  background:#f4f6f9;
 }
 .box {
   max-width:600px;
-  margin:40px auto;
+  margin:30px auto;
   background:#fff;
   padding:15px;
   border-radius:8px;
@@ -29,8 +23,23 @@ body { font-family: Arial; background:#f4f6f9; }
   padding:10px;
   margin-bottom:10px;
 }
-.user { color:#007bff; margin-bottom:6px; }
-.ai { color:#000; margin-bottom:10px; }
+.msg {
+  margin-bottom:6px;
+}
+.user { color:#007bff; }
+.ai { color:#000; }
+.delete {
+  color:red;
+  cursor:pointer;
+  margin-left:6px;
+  font-weight:bold;
+}
+input {
+  width:75%;
+}
+button {
+  padding:4px 10px;
+}
 </style>
 </head>
 
@@ -41,7 +50,7 @@ body { font-family: Arial; background:#f4f6f9; }
 
   <div id="chat"></div>
 
-  <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
+  <input id="msg" placeholder="Rubuta sakonka...">
   <button onclick="sendMsg()">Send</button>
 </div>
 
@@ -49,32 +58,64 @@ body { font-family: Arial; background:#f4f6f9; }
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 
-/* LOAD OLD CHAT */
-chat.innerHTML = localStorage.getItem("chatHistory") || "";
+/* LOAD CHAT */
+loadChat();
 
+function loadChat() {
+  chat.innerHTML = localStorage.getItem("chatHistory") || "";
+}
+
+/* SAVE CHAT */
+function saveChat() {
+  localStorage.setItem("chatHistory", chat.innerHTML);
+}
+
+/* DELETE MESSAGE */
+function deleteMsg(el) {
+  el.parentElement.remove();
+  saveChat();
+}
+
+/* SEND MESSAGE */
 async function sendMsg() {
   const text = input.value.trim();
   if (!text) return;
 
-  chat.innerHTML += `<div class="user"><b>You:</b> ${text}</div>`;
+  chat.innerHTML += `
+    <div class="msg user">
+      <b>You:</b> ${text}
+      <span class="delete" onclick="deleteMsg(this)">❌</span>
+    </div>
+  `;
   input.value = "";
-
   saveChat();
 
-  const res = await fetch("/chat", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ message: text })
-  });
+  try {
+    const res = await fetch("/chat", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ message: text })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  chat.innerHTML += `<div class="ai"><b>AI:</b> ${data.reply}</div>`;
-  saveChat();
-}
+    chat.innerHTML += `
+      <div class="msg ai">
+        <b>AI:</b> ${data.reply || "Error"}
+        <span class="delete" onclick="deleteMsg(this)">❌</span>
+      </div>
+    `;
+    saveChat();
 
-function saveChat() {
-  localStorage.setItem("chatHistory", chat.innerHTML);
+  } catch {
+    chat.innerHTML += `
+      <div class="msg ai">
+        <b>AI:</b> Server error
+        <span class="delete" onclick="deleteMsg(this)">❌</span>
+      </div>
+    `;
+    saveChat();
+  }
 }
 </script>
 
