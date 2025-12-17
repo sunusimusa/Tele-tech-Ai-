@@ -10,6 +10,7 @@
       font-family: Arial, sans-serif;
       background: #f4f6f9;
     }
+
     .container {
       max-width: 600px;
       margin: 40px auto;
@@ -21,10 +22,12 @@
       flex-direction: column;
       height: 80vh;
     }
+
     h2 {
       text-align: center;
       margin-bottom: 10px;
     }
+
     #chat {
       flex: 1;
       overflow-y: auto;
@@ -34,41 +37,50 @@
       margin-bottom: 10px;
       background: #fafafa;
     }
+
     .msg {
       margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
+
     .user {
       justify-content: flex-end;
     }
+
     .ai {
       justify-content: flex-start;
     }
+
     .bubble {
       padding: 6px 10px;
       border-radius: 12px;
       max-width: 80%;
       word-wrap: break-word;
     }
+
     .user .bubble {
       background: #007bff;
       color: white;
     }
+
     .ai .bubble {
       background: #e9e9e9;
       color: #000;
     }
+
     .delete {
       cursor: pointer;
       color: red;
-      font-size: 13px;
+      font-size: 14px;
     }
+
     .input-box {
       display: flex;
       gap: 6px;
     }
+
     textarea {
       flex: 1;
       resize: none;
@@ -77,6 +89,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     button {
       padding: 0 16px;
       border: none;
@@ -84,11 +97,6 @@
       background: #28a745;
       color: white;
       cursor: pointer;
-    }
-    #upgrade {
-      text-align: center;
-      margin-top: 10px;
-      display: none;
     }
   </style>
 </head>
@@ -100,12 +108,6 @@
 
   <div id="chat"></div>
 
-  <div id="upgrade">
-    <a href="/pricing" style="color:red; font-weight:bold;">
-      Free limit full – Upgrade to Pro 🚀
-    </a>
-  </div>
-
   <div class="input-box">
     <textarea id="msg" placeholder="Rubuta sakonka a nan..."></textarea>
     <button onclick="sendMsg()">Send</button>
@@ -113,30 +115,29 @@
 </div>
 
 <script>
-  // ===== USER & PLAN =====
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const plan = user.plan || "free";
-
+  // ===== PLAN & LIMIT =====
   let usage = parseInt(localStorage.getItem("usage") || "0");
   const FREE_LIMIT = 5;
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const plan = user.plan || "free";
 
   function deleteMsg(el) {
     el.parentElement.remove();
   }
 
   async function sendMsg() {
+    if (plan === "free" && usage >= FREE_LIMIT) {
+      alert("Free limit full. Ka upgrade zuwa Pro 🚀");
+      window.location.href = "/pricing.html";
+      return;
+    }
+
     const input = document.getElementById("msg");
     const chat = document.getElementById("chat");
-    const upgrade = document.getElementById("upgrade");
     const message = input.value.trim();
 
     if (!message) return;
-
-    // 🔒 FREE LIMIT CHECK
-    if (plan === "free" && usage >= FREE_LIMIT) {
-      upgrade.style.display = "block";
-      return;
-    }
 
     // USER MESSAGE
     const userDiv = document.createElement("div");
@@ -171,11 +172,8 @@
       aiDiv.querySelector(".bubble").innerText =
         data.success ? data.reply : "Error ❌";
 
-      // ƙara usage idan free
-      if (plan === "free") {
-        usage++;
-        localStorage.setItem("usage", usage);
-      }
+      usage++;
+      localStorage.setItem("usage", usage);
 
     } catch (err) {
       aiDiv.querySelector(".bubble").innerText = "Server error ❌";
