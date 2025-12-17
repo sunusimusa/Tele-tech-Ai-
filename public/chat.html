@@ -62,8 +62,7 @@ const today = new Date().toDateString();
 if (usage.date !== today) {
   usage = { count: 0, date: today };
   localStorage.setItem("usage", JSON.stringify(usage));
-}
-<script>
+
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
@@ -75,7 +74,7 @@ saved.forEach(addToChat);
 /* SEND BUTTON */
 sendBtn.onclick = sendMsg;
 
-async function sendMsg() {async function sendMsg() {
+  {async function sendMsg() {
 
   // 🚫 FREE LIMIT CHECK (A FARKO)
   if (plan === "free" && usage.count >= FREE_LIMIT) {
