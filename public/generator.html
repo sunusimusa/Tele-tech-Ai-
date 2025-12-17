@@ -1,116 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>Tele Tech AI (Text)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 40px auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,.1);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    #chat {
-      height: 320px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      background: #fafafa;
-    }
-
-    .user {
-      text-align: right;
-      margin-bottom: 10px;
-    }
-
-    .user span {
-      background: #007bff;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 15px;
-      display: inline-block;
-      max-width: 80%;
-    }
-
-    .ai {
-      text-align: left;
-      margin-bottom: 10px;
-    }
-
-    .ai span {
-      background: #e5e5e5;
-      padding: 8px 12px;
-      border-radius: 15px;
-      display: inline-block;
-      max-width: 80%;
-    }
-
-    textarea {
-      width: 100%;
-      height: 60px;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      resize: none;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    button {
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .send {
-      background: #28a745;
-      color: #fff;
-      flex: 1;
-    }
-
-    .clear {
-      background: #dc3545;
-      color: #fff;
-    }
-  </style>
 </head>
 
-<body>
+<body style="font-family:Arial; background:#f4f6f9;">
 
-<div class="container">
-  <h2>Tele Tech AI (Text)</h2>
+<div style="
+  max-width:600px;
+  margin:40px auto;
+  padding:20px;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,.1);
+">
 
-  <div id="chat"></div>
+<h2 style="text-align:center;">Tele Tech AI (Text)</h2>
 
-  <textarea id="msg" placeholder="Rubuta sakonka a nan..."></textarea>
+<!-- CHAT AREA -->
+<div id="chat" style="
+  height:300px;
+  overflow-y:auto;
+  border:1px solid #ddd;
+  padding:10px;
+  margin-bottom:10px;
+">
+</div>
 
-  <div class="actions">
-    <button class="send" onclick="sendMsg()">Send</button>
-    <button class="clear" onclick="clearChat()">Delete chat</button>
-  </div>
+<!-- INPUT -->
+<textarea id="msg"
+  placeholder="Rubuta sakonka a nan..."
+  style="width:100%;height:70px;"></textarea>
+
+<button onclick="sendMsg()"
+  style="margin-top:10px; padding:10px 20px; background:#28a745; color:#fff; border:none; border-radius:6px;">
+  Send
+</button>
+
 </div>
 
 <script>
@@ -121,23 +49,27 @@ async function sendMsg() {
 
   if (!message) return;
 
-  // 🧍 User message
-  chat.innerHTML += `
-    <div class="user">
-      <span>${message}</span>
-    </div>
+  // USER MESSAGE
+  const userDiv = document.createElement("div");
+  userDiv.style.marginBottom = "8px";
+  userDiv.innerHTML = `
+    <b>You:</b> ${message}
+    <span onclick="this.parentElement.remove()"
+      style="color:red; cursor:pointer; margin-left:8px;">
+      🗑️
+    </span>
   `;
+  chat.appendChild(userDiv);
 
   input.value = "";
   chat.scrollTop = chat.scrollHeight;
 
-  // 🤖 Thinking
-  const id = "ai-" + Date.now();
-  chat.innerHTML += `
-    <div class="ai" id="${id}">
-      <span>Thinking...</span>
-    </div>
-  `;
+  // THINKING
+  const aiDiv = document.createElement("div");
+  aiDiv.style.marginBottom = "8px";
+  aiDiv.style.color = "gray";
+  aiDiv.innerHTML = `<b>AI:</b> Thinking...`;
+  chat.appendChild(aiDiv);
   chat.scrollTop = chat.scrollHeight;
 
   try {
@@ -149,22 +81,19 @@ async function sendMsg() {
 
     const data = await res.json();
 
-    document.getElementById(id).innerHTML = `
-      <span>${data.success ? data.reply : "Error"}</span>
+    aiDiv.innerHTML = `
+      <b>AI:</b> ${data.success ? data.reply : "Error"}
+      <span onclick="this.parentElement.remove()"
+        style="color:red; cursor:pointer; margin-left:8px;">
+        🗑️
+      </span>
     `;
-    chat.scrollTop = chat.scrollHeight;
 
   } catch (e) {
-    document.getElementById(id).innerHTML =
-      "<span>Server error ❌</span>";
+    aiDiv.innerHTML = `<b>AI:</b> Server error ❌`;
   }
-}
 
-// 🗑️ Delete chat (idan mutum ya so)
-function clearChat() {
-  if (confirm("Kana so ka goge duk chat ɗin?")) {
-    document.getElementById("chat").innerHTML = "";
-  }
+  chat.scrollTop = chat.scrollHeight;
 }
 </script>
 
