@@ -106,10 +106,8 @@
 <div class="container">
   <h2>Tele Tech AI (Text)</h2>
 
-  <!-- CHAT -->
   <div id="chat"></div>
 
-  <!-- INPUT -->
   <div class="input-box">
     <textarea id="msg" placeholder="Rubuta sakonka a nan..."></textarea>
     <button onclick="sendMsg()">Send</button>
@@ -117,13 +115,12 @@
 </div>
 
 <script>
-  /* ===== USER + PLAN ===== */
+  // ===== PLAN & LIMIT =====
+  let usage = parseInt(localStorage.getItem("usage") || "0");
+  const FREE_LIMIT = 5;
+
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const plan = user.plan || "free";
-
-  /* ===== FREE LIMIT ===== */
-  const FREE_LIMIT = 5;
-  let usage = parseInt(localStorage.getItem("usage") || "0");
 
   function deleteMsg(el) {
     el.parentElement.remove();
@@ -136,13 +133,13 @@
 
     if (!message) return;
 
-    // 🔒 FREE LIMIT CHECK
+    // ❌ FREE LIMIT
     if (plan === "free" && usage >= FREE_LIMIT) {
-      alert("Free limit ya cika ❌ Ka upgrade zuwa Pro 🚀");
+      alert("Free limit ya cika. Ka upgrade zuwa Pro 🚀");
       return;
     }
 
-    // 🧍 USER MESSAGE
+    // USER MESSAGE
     const userDiv = document.createElement("div");
     userDiv.className = "msg user";
     userDiv.innerHTML = `
@@ -154,7 +151,7 @@
     input.value = "";
     chat.scrollTop = chat.scrollHeight;
 
-    // 🤖 AI THINKING
+    // AI THINKING
     const aiDiv = document.createElement("div");
     aiDiv.className = "msg ai";
     aiDiv.innerHTML = `
@@ -175,11 +172,8 @@
       aiDiv.querySelector(".bubble").innerText =
         data.success ? data.reply : "Error ❌";
 
-      // 📊 UPDATE USAGE (FREE)
-      if (plan === "free") {
-        usage++;
-        localStorage.setItem("usage", usage);
-      }
+      usage++;
+      localStorage.setItem("usage", usage);
 
     } catch (err) {
       aiDiv.querySelector(".bubble").innerText = "Server error ❌";
