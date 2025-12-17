@@ -47,7 +47,6 @@ body {
   <button id="sendBtn">Send</button>
 </div>
   
-<script>
 //PLAN & LIMIT
 const FREE_LIMIT = 10;
 const user = 
@@ -100,27 +99,30 @@ sendBtn.onclick = sendMsg;
   try {
     const res = await fetch("/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
+      headers: { "Content-Type": 
+  "application/json" },
+      body: JSON.stringify({ message:
+  text })
     });
 
     const data = await res.json();
-    const aiMsg = { role: "AI", text: data.reply || "Error" };
+    const aiMsg = { role: "AI", text:
+  data.reply || "Error" };
 
     saveMsg(aiMsg);
     addToChat(aiMsg);
 
-    // ✅ ƙara count bayan nasara
     usage.count++;
-    localStorage.setItem("usage", JSON.stringify(usage));
+    localStorage.setItem("usage", 
+  JSON.stringify(usage));
 
   } catch {
-    const aiMsg = { role: "AI", text: "Server error" };
+    const aiMsg = { role: "AI", text: 
+ "Server error" };
     saveMsg(aiMsg);
     addToChat(aiMsg);
   }
-}
-  
+    
   const userMsg = { role: "You", text };
   saveMsg(userMsg);
   addToChat(userMsg);
