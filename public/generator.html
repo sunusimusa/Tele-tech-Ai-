@@ -117,29 +117,32 @@
 </div>
 
 <script>
-  // ===== PLAN & LIMIT =====
-  let usage = parseInt(localStorage.getItem("usage") || "0");
+  /* ===== FREE / PRO CONFIG ===== */
   const FREE_LIMIT = 5;
+  let usage = parseInt(localStorage.getItem("usage") || "0");
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const plan = user.plan || "free";
+  const plan = user.plan || "free"; // free | pro
 
   function deleteMsg(el) {
     el.parentElement.remove();
   }
 
   async function sendMsg() {
+    // ✅ FREE LIMIT CHECK
     if (plan === "free" && usage >= FREE_LIMIT) {
-      alert("Free limit ya cika ❌ Ka upgrade zuwa Pro 🚀");
+      alert("Free limit ya cika. Ka upgrade zuwa Pro 🚀");
+      window.location.href = "/pricing";
       return;
     }
 
     const input = document.getElementById("msg");
     const chat = document.getElementById("chat");
     const message = input.value.trim();
+
     if (!message) return;
 
-    // USER MESSAGE
+    // 🧍‍♂️ USER MESSAGE
     const userDiv = document.createElement("div");
     userDiv.className = "msg user";
     userDiv.innerHTML = `
@@ -151,7 +154,7 @@
     input.value = "";
     chat.scrollTop = chat.scrollHeight;
 
-    // AI THINKING
+    // 🤖 AI THINKING
     const aiDiv = document.createElement("div");
     aiDiv.className = "msg ai";
     aiDiv.innerHTML = `
@@ -172,6 +175,7 @@
       aiDiv.querySelector(".bubble").innerText =
         data.success ? data.reply : "Error ❌";
 
+      // ƙara usage
       usage++;
       localStorage.setItem("usage", usage);
 
