@@ -97,7 +97,9 @@ if (plan === "free" && usage.count >= FREE_LIMIT) {
 
     const data = await res.json();
     const aiMsg = { role: "AI", text: data.reply || "Error" };
-    saveMsg(aiMsg);
+    saveMsg(aiMsg);// Ƙara usage
+usage.count++;
+localStorage.setItem("usage", JSON.stringify(usage));
     addToChat(aiMsg);
 
   } catch {
