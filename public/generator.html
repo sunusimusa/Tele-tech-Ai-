@@ -129,69 +129,24 @@
 
 <script>
   // ===== PLAN & LIMIT =====
-  const FREE_LIMIT = 5;
-  let usage = parseInt(localStorage.getItem("usage") || "0");
+  <script>
+const FREE_LIMIT = 5;        // adadin sakonni
+const RESET_HOURS = 8;       // awa 8
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const plan = user.plan || "free";
+// Karanta usage
+let usageData = JSON.parse(localStorage.getItem("usageData") || "{}");
 
-  function deleteMsg(el) {
-    el.parentElement.remove();
-  }
+const now = Date.now();
 
-  async function sendMsg() {
-    if (plan === "free" && usage >= FREE_LIMIT) {
-      document.getElementById("upgrade").style.display = "block";
-      return;
-    }
-
-    const input = document.getElementById("msg");
-    const chat = document.getElementById("chat");
-    const message = input.value.trim();
-    if (!message) return;
-
-    // USER MESSAGE
-    const userDiv = document.createElement("div");
-    userDiv.className = "msg user";
-    userDiv.innerHTML = `
-      <span class="delete" onclick="deleteMsg(this)">❌</span>
-      <div class="bubble">${message}</div>
-    `;
-    chat.appendChild(userDiv);
-
-    input.value = "";
-    chat.scrollTop = chat.scrollHeight;
-
-    // AI THINKING
-    const aiDiv = document.createElement("div");
-    aiDiv.className = "msg ai";
-    aiDiv.innerHTML = `
-      <div class="bubble">Thinking...</div>
-      <span class="delete" onclick="deleteMsg(this)">❌</span>
-    `;
-    chat.appendChild(aiDiv);
-    chat.scrollTop = chat.scrollHeight;
-
-    try {
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      });
-
-      const data = await res.json();
-      aiDiv.querySelector(".bubble").innerText =
-        data.success ? data.reply : "Error ❌";
-
-      usage++;
-      localStorage.setItem("usage", usage);
-
-    } catch (err) {
-      aiDiv.querySelector(".bubble").innerText = "Server error ❌";
-    }
-
-    chat.scrollTop = chat.scrollHeight;
-  }
+// Idan babu lokaci ko awa 8 ta wuce → reset
+if (!usageData.startTime || (now - usageData.startTime) > RESET_HOURS * 60 * 60 * 1000) {
+  usageData = {
+    count: 0,
+    startTime: now
+  };
+}
+// Ajiye
+localStorage.setItem("usageData", JSON.stringify(usageData));
 </script>
 
 </body>
