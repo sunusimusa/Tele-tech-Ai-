@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tele Tech AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="font-family:Arial; padding:20px;">
+
+<h2>Tele Tech AI (Text)</h2>
+
+<div id="chat" style="
+  border:1px solid #ccc;
+  padding:10px;
+  height:300px;
+  overflow-y:auto;
+  margin-bottom:10px;
+"></div>
+
+<textarea id="msg" placeholder="Type your message..."
+  style="width:100%; height:60px;"></textarea>
+
+<br><br>
+
+<button onclick="sendMsg()" style="padding:10px 20px;">
+  Send
+</button>
+
+<script>
+async function sendMsg() {
+  const input = document.getElementById("msg");
+  const chat = document.getElementById("chat");
+  const text = input.value.trim();
+  if (!text) return;
+
+  chat.innerHTML += "<b>You:</b> " + text + "<br>";
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
+
+  chat.innerHTML += "<i>AI is thinking...</i><br>";
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+    chat.innerHTML += "<b>AI:</b> " + data.reply + "<br><br>";
+    chat.scrollTop = chat.scrollHeight;
+
+  } catch {
+    chat.innerHTML += "<b>Error:</b> Server issue<br>";
+  }
+}
+</script>
+
+</body>
+</html>
