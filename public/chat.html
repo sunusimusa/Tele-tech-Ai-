@@ -163,16 +163,41 @@ function deleteMsg(el) {
   data = data.filter(m => m.text !== div.innerText);
   localStorage.setItem("chatData", JSON.stringify(data));
 }
-
-/* ===== UPGRADE BUTTON ===== */
+/* ===== UPGRADE BUTTON (FLUTTERWAVE) ===== */
 const upgradeBtn = document.getElementById("upgradeBtn");
 
-upgradeBtn.addEventListener("click", () => {
-  alert(
-    "Upgrade to Pro 🚀\n\n" +
-    "Pro plan yana nan tafe.\n" +
-    "Domin upgrade, tuntubi admin."
-  );
+upgradeBtn.addEventListener("click", async () => {
+  const email = prompt("Enter your email for Pro upgrade:");
+  if (!email) return;
+
+  upgradeBtn.disabled = true;
+  upgradeBtn.innerText = "Redirecting to payment...";
+
+  try {
+    const res = await fetch("/pay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email,
+        amount: 1000
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.link) {
+      window.location.href = data.link;
+    } else {
+      alert("Payment initialization failed");
+      upgradeBtn.disabled = false;
+      upgradeBtn.innerText = "Upgrade to Pro 🚀";
+    }
+
+  } catch (err) {
+    alert("Network error. Try again.");
+    upgradeBtn.disabled = false;
+    upgradeBtn.innerText = "Upgrade to Pro 🚀";
+  }
 });
 </script>
 
