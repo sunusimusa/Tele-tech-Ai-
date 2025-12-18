@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const OpenAI = require("openai");
+const axios = require("axios");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -26,55 +27,13 @@ app.post("/chat", async (req, res) => {
         reply: "No message received"
       });
     }
-// ===== PAYMENT API =====
-app.post("/pay", async (req, res) => {
-  try {
-    const { email, amount } = req.body;
 
-    if (!email || !amount) {
-      return res.json({ error: "Missing payment data" });
-    }
-
-    const response = await fetch("https://api.flutterwave.com/v3/payments", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        tx_ref: "tele-tech-" + Date.now(),
-        amount: amount,
-        currency: "NGN",
-        redirect_url: "https://tele-tech-ai.onrender.com/success.html",
-        customer: {
-          email: email
-        },
-        customizations: {
-          title: "Tele Tech AI Pro",
-          description: "Pro subscription payment"
-        }
-      })
-    });
-
-    const data = await response.json();
-
-    if (data.status === "success") {
-      res.json({ link: data.data.link });
-    } else {
-      res.json({ error: "Flutterwave error", data });
-    }
-
-  } catch (err) {
-    console.error("PAY ERROR:", err);
-    res.json({ error: "Payment initialization failed" });
-  }
-});
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant. Reply clearly and simply."
+          content: "You are a helpful Hausa assistant."
         },
         {
           role: "user",
@@ -98,17 +57,22 @@ app.post("/pay", async (req, res) => {
     });
   }
 });
-const axios = require("axios");
 
-/* ===== FLUTTERWAVE PAYMENT ===== */
+// ===== FLUTTERWAVE PAYMENT API =====
 app.post("/pay", async (req, res) => {
   try {
     const { email, amount } = req.body;
 
+    if (!email || !amount) {
+      return res.status(400).json({
+        error: "Missing email or amount"
+      });
+    }
+
     const response = await axios.post(
       "https://api.flutterwave.com/v3/payments",
       {
-        tx_ref: "teletech_" + Date.now(),
+        tx_ref: "tele-tech-" + Date.now(),
         amount: amount,
         currency: "NGN",
         redirect_url: "https://tele-tech-ai.onrender.com/success.html",
@@ -128,13 +92,18 @@ app.post("/pay", async (req, res) => {
       }
     );
 
-    res.json({ link: response.data.data.link });
+    res.json({
+      link: response.data.data.link
+    });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Payment error" });
+    console.error("PAYMENT ERROR:", err.response?.data || err.message);
+    res.status(500).json({
+      error: "Payment initialization failed"
+    });
   }
 });
+
 // ===== START SERVER =====
 app.listen(PORT, () => {
   console.log("✅ Server running on port " + PORT);
