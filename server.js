@@ -6,6 +6,30 @@ const OpenAI = require("openai");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+const fs = require("fs");
+
+const USERS_FILE = "./data/users.json";
+
+function getUsers() {
+  return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+
+function upgradeUserToPro(email) {
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
+
+  if (user) {
+    user.plan = "pro";
+    saveUsers(users);
+    console.log("🚀 User upgraded to PRO:", email);
+  } else {
+    console.log("⚠️ User not found:", email);
+  }
+}
 
 // ===== OPENAI =====
 const openai = new OpenAI({
