@@ -4,36 +4,58 @@
 <meta charset="UTF-8">
 <title>Tele Tech AI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body { font-family: Arial; background:#f4f6f9; }
-.box { max-width:600px; margin:20px auto; background:#fff; padding:10px; }
-#chat { height:300px; border:1px solid #ccc; padding:8px; overflow-y:auto; }
-.msg { margin-bottom:6px; }
-.user { color:#007bff; }
-.ai { color:#000; }
-.del { color:red; cursor:pointer; margin-left:5px; }
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+}
+
+.box {
+  max-width: 600px;
+  margin: 30px auto;
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+#chat {
+  min-height: 300px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  overflow-y: auto;
+}
+
+.msg {
+  margin-bottom: 6px;
+}
+
+.user { color: #007bff; }
+.ai { color: #000; }
+
+.delete {
+  color: red;
+  cursor: pointer;
+  margin-left: 6px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="box">
-  <h3>Tele Tech AI</h3>
+  <h2>Tele Tech AI</h2>
 
   <div id="chat"></div>
 
-  <input id="msg" placeholder="Type message..." style="width:75%">
+  <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
   <button id="sendBtn">Send</button>
 </div>
 
 <script>
-// ===== LIMIT =====
+/* ===== LIMIT ===== */
 const FREE_LIMIT = 10;
-
-// ===== USER & USAGE =====
-const user = JSON.parse(localStorage.getItem("user") || "{}");
-const plan = user.plan || "free";
-
 let usage = JSON.parse(localStorage.getItem("usage") || "{}");
 const today = new Date().toDateString();
 
@@ -42,26 +64,26 @@ if (usage.date !== today) {
   localStorage.setItem("usage", JSON.stringify(usage));
 }
 
-// ===== ELEMENTS =====
+/* ===== ELEMENTS ===== */
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
 
-// ===== LOAD OLD CHAT =====
+/* ===== LOAD CHAT ===== */
 const saved = JSON.parse(localStorage.getItem("chatData") || "[]");
-saved.forEach(showMsg);
+saved.forEach(addToChat);
 
-// ===== SEND =====
-sendBtn.onclick = sendMsg;
+/* ===== SEND ===== */
+sendBtn.addEventListener("click", sendMsg);
 
 async function sendMsg() {
-  if (plan === "free" && usage.count >= FREE_LIMIT) {
-    alert("Free limit reached (10/day). Upgrade to Pro 🚀");
-    return;
-  }
-
   const text = input.value.trim();
   if (!text) return;
+
+  if (usage.count >= FREE_LIMIT) {
+    alert("Free limit reached (10 messages/day)");
+    return;
+  }
 
   addAndSave("You", text);
   input.value = "";
@@ -84,27 +106,37 @@ async function sendMsg() {
   }
 }
 
-// ===== HELPERS =====
+/* ===== HELPERS ===== */
 function addAndSave(role, text) {
-  showMsg({ role, text });
-
-  const data = JSON.parse(localStorage.getItem("chatData") || "[]");
-  data.push({ role, text });
-  localStorage.setItem("chatData", JSON.stringify(data));
+  const msg = { role, text };
+  saveMsg(msg);
+  addToChat(msg);
 }
 
-function showMsg(msg) {
+function addToChat(msg) {
   const div = document.createElement("div");
   div.className = "msg " + (msg.role === "You" ? "user" : "ai");
-  div.innerHTML = `<b>${msg.role}:</b> ${msg.text}
-    <span class="del" onclick="delMsg(this)">❌</span>`;
+  div.innerHTML = `
+    <b>${msg.role}:</b> ${msg.text}
+    <span class="delete" onclick="deleteMsg(this)">❌</span>
+  `;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
 
-function delMsg(el) {
+function saveMsg(msg) {
+  const data = JSON.parse(localStorage.getItem("chatData") || "[]");
+  data.push(msg);
+  localStorage.setItem("chatData", JSON.stringify(data));
+}
+
+function deleteMsg(el) {
   const div = el.parentElement;
   div.remove();
+
+  let data = JSON.parse(localStorage.getItem("chatData") || "[]");
+  data = data.filter(m => m.text !== div.innerText);
+  localStorage.setItem("chatData", JSON.stringify(data));
 }
 </script>
 
