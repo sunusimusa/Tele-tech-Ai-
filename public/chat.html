@@ -27,10 +27,7 @@ body {
   overflow-y: auto;
 }
 
-.msg {
-  margin-bottom: 6px;
-}
-
+.msg { margin-bottom: 6px; }
 .user { color: #007bff; }
 .ai { color: #000; }
 
@@ -49,37 +46,24 @@ body {
 
   <div id="chat"></div>
 
-<input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
-<button id="sendBtn">Send</button> 
-  
-<br><br>
-<button id="upgradeBtn">Upgrade to Pro 🚀</button>
-<br>
+  <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
+  <button id="sendBtn">Send</button>
 
-<p style="font-size:14px; text-align:center;">
-  📲 <b>Join WhatsApp Group</b> for updates & support <br>
-  <a 
-    href="https://chat.whatsapp.com/G4tqlP1R8rFEUQ03BHviuD" 
-    target="_blank"
-    style="color:#007bff; font-weight:bold;"
-  >
-    👉 Join WhatsApp Group
-  </a>
-</p>
+  <br><br>
+  <button id="upgradeBtn">Upgrade to Pro 🚀</button>
 
-<hr>
-  
-<p style="font-size:14px; text-align:center;">
-  💳 <b>Pro Upgrade Payment</b><br>
-  Price: <b>₦1,000 / month</b><br>
-  Bank: <b>OPay</b><br>
-  Account Name: <b>SUNUSI MUSA</b><br>
-  Account Number: <b>7012146832</b><br><br>
-  Bayan biya, turo proof a WhatsApp 👇
-</p>
+  <hr>
+
+  <p style="font-size:14px; text-align:center;">
+    📲 <b>Join WhatsApp Group</b><br>
+    <a href="https://chat.whatsapp.com/G4tqlP1R8rFEUQ03BHviuD" target="_blank">
+      👉 Join WhatsApp Group
+    </a>
+  </p>
+</div>
 
 <script>
-/* ===== LIMIT ===== */
+/* ===== FREE LIMIT ===== */
 const FREE_LIMIT = 10;
 let usage = JSON.parse(localStorage.getItem("usage") || "{}");
 const today = new Date().toDateString();
@@ -93,12 +77,13 @@ if (usage.date !== today) {
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
+const upgradeBtn = document.getElementById("upgradeBtn");
 
 /* ===== LOAD CHAT ===== */
 const saved = JSON.parse(localStorage.getItem("chatData") || "[]");
 saved.forEach(addToChat);
 
-/* ===== SEND ===== */
+/* ===== SEND MESSAGE ===== */
 sendBtn.addEventListener("click", sendMsg);
 
 async function sendMsg() {
@@ -106,8 +91,15 @@ async function sendMsg() {
   if (!text) return;
 
   if (usage.count >= FREE_LIMIT) {
-    alert("Free limit reached (10 messages/day)");
+    alert("❌ Free limit ya cika (10 messages/day)");
     return;
+  }
+
+  let email = localStorage.getItem("email");
+  if (!email) {
+    email = prompt("Shigar da email dinka:");
+    if (!email) return;
+    localStorage.setItem("email", email);
   }
 
   addAndSave("You", text);
@@ -117,7 +109,7 @@ async function sendMsg() {
     const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ message: text, email })
     });
 
     const data = await res.json();
@@ -131,7 +123,7 @@ async function sendMsg() {
   }
 }
 
-/* ===== HELPERS ===== */
+/* ===== CHAT HELPERS ===== */
 function addAndSave(role, text) {
   const msg = { role, text };
   saveMsg(msg);
@@ -141,10 +133,7 @@ function addAndSave(role, text) {
 function addToChat(msg) {
   const div = document.createElement("div");
   div.className = "msg " + (msg.role === "You" ? "user" : "ai");
-  div.innerHTML = `
-    <b>${msg.role}:</b> ${msg.text}
-    <span class="delete" onclick="deleteMsg(this)">❌</span>
-  `;
+  div.innerHTML = `<b>${msg.role}:</b> ${msg.text}`;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
@@ -155,84 +144,42 @@ function saveMsg(msg) {
   localStorage.setItem("chatData", JSON.stringify(data));
 }
 
-function deleteMsg(el) {
-  const div = el.parentElement;
-  div.remove();
-
-  let data = JSON.parse(localStorage.getItem("chatData") || "[]");
-  data = data.filter(m => m.text !== div.innerText);
-  localStorage.setItem("chatData", JSON.stringify(data));
-}
-/* ===== UPGRADE BUTTON (FLUTTERWAVE) ===== */
-const upgradeBtn = document.getElementById("upgradeBtn");
-
+/* ===== UPGRADE BUTTON ===== */
 upgradeBtn.addEventListener("click", async () => {
-  const email = prompt("Enter your email for Pro upgrade:");
-  if (!email) return;
+  let email = localStorage.getItem("email");
+  if (!email) {
+    email = prompt("Enter your email for Pro upgrade:");
+    if (!email) return;
+    localStorage.setItem("email", email);
+  }
 
   upgradeBtn.disabled = true;
-  upgradeBtn.innerText = "Redirecting to payment...";
+  upgradeBtn.innerText = "Redirecting...";
 
   try {
     const res = await fetch("/pay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email,
-        amount: 1000
-      })
-    });
-app.post("/chat", async (req, res) => {
-  try {
-    const { message, email } = req.body;
-
-    if (!message) {
-      return res.json({ reply: "No message received" });
-    }
-
-    const users = getUsers();
-    const user = users.find(u => u.email === email);
-
-    if (!user || user.plan !== "pro") {
-      return res.json({
-        reply: "❌ Wannan feature na PRO ne. Don Allah ka upgrade."
-      });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: message }
-      ]
+      body: JSON.stringify({ email, amount: 1000 })
     });
 
-    res.json({
-      reply: completion.choices[0].message.content
-    });
-
-  } catch (err) {
-    console.error("CHAT ERROR:", err);
-    res.json({ reply: "AI error" });
-  }
-});
-    
     const data = await res.json();
-
     if (data.link) {
       window.location.href = data.link;
     } else {
-      alert("Payment initialization failed");
-      upgradeBtn.disabled = false;
-      upgradeBtn.innerText = "Upgrade to Pro 🚀";
+      alert("Payment init failed");
+      resetBtn();
     }
-
-  } catch (err) {
-    alert("Network error. Try again.");
-    upgradeBtn.disabled = false;
-    upgradeBtn.innerText = "Upgrade to Pro 🚀";
+  } catch {
+    alert("Network error");
+    resetBtn();
   }
 });
+
+function resetBtn() {
+  upgradeBtn.disabled = false;
+  upgradeBtn.innerText = "Upgrade to Pro 🚀";
+}
 </script>
 
 </body>
