@@ -16,7 +16,7 @@ const openai = new OpenAI({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// ===== CHAT API =====
+// ================= CHAT API =================
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -33,7 +33,7 @@ app.post("/chat", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You are a helpful Hausa assistant."
+          content: "You are a helpful Hausa assistant. Reply clearly."
         },
         {
           role: "user",
@@ -58,7 +58,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// ===== FLUTTERWAVE PAYMENT API =====
+// ================= PAYMENT API (FLUTTERWAVE) =================
 app.post("/pay", async (req, res) => {
   try {
     const { email, amount } = req.body;
@@ -92,13 +92,13 @@ app.post("/pay", async (req, res) => {
       }
     );
 
-    res.json({
+    return res.json({
       link: response.data.data.link
     });
 
   } catch (err) {
-    console.error("PAYMENT ERROR:", err.response?.data || err.message);
-    res.status(500).json({
+    console.error("PAY ERROR:", err.response?.data || err.message);
+    return res.status(500).json({
       error: "Payment initialization failed"
     });
   }
