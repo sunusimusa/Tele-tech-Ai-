@@ -1,1 +1,11 @@
+const email = localStorage.getItem("email") || prompt("Enter your email:");
+localStorage.setItem("email", email);
 
+const res = await fetch("/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    message: text,
+    email: email
+  })
+});
