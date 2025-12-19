@@ -134,6 +134,9 @@ app.post("/webhook", express.json(), (req, res) => {
 
   res.status(200).send("OK");
 });
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log("✅ Server running on port", PORT);
