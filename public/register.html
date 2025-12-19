@@ -1,34 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Register</title>
 </head>
 <body>
+  <h2>Create Account</h2>
 
-<h2>Register</h2>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
 
-<input id="username" placeholder="Username"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+  <button onclick="register()">Register</button>
 
-<button onclick="register()">Register</button>
-<p id="msg"></p>
+  <script>
+    async function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-<script>
-async function register() {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+      const res = await fetch("/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
 
-  const res = await fetch("/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
-  });
+      const data = await res.json();
 
-  const data = await res.json();
-  document.getElementById("msg").innerText =
-    data.success ? "Registered! Go to login" : data.message;
-}
-</script>
-
+      if (data.success) {
+        alert("Account created ✅");
+        window.location.href = "/";
+      } else {
+        alert(data.error);
+      }
+    }
+  </script>
 </body>
 </html>
