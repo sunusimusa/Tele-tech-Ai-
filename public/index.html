@@ -2,199 +2,38 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Tele Tech AI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Login</title>
+<title>Login – Tele Tech AI</title>
 </head>
 <body>
-  <h2>Login</h2>
+<h2>Login</h2>
 
-  <input id="email" placeholder="Email"><br><br>
-  <input id="password" type="password" placeholder="Password"><br><br>
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
 
-  <button onclick="login()">Login</button>
-  <p><a href="/register.html">Create account</a></p>
-
-  <script>
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      const res = await fetch("/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        localStorage.setItem("email", data.email);
-        localStorage.setItem("plan", data.plan);
-        window.location.href = "/chat.html";
-      } else {
-        alert(data.error);
-      }
-    }
-  </script>
-</body>
-</html>
-  
-<style>
-body { font-family: Arial; background:#f4f6f9; }
-.box { max-width:600px; margin:20px auto; background:#fff; padding:15px; border-radius:8px; }
-#chat { min-height:250px; border:1px solid #ccc; padding:10px; margin-bottom:10px; overflow-y:auto; }
-.msg { margin-bottom:6px; }
-.user { color:#007bff; }
-.ai { color:#000; }
-img { max-width:100%; margin-top:10px; border-radius:8px; }
-button { margin-top:5px; }
-</style>
-</head>
-
-<body>
-<div class="box">
-  <h2>Tele Tech AI</h2>
-
-  <div id="chat"></div>
-
-  <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
-  <button id="sendBtn">Send</button>
-
-  <hr>
-
-  <h3>🎨 AI Image Generator (PRO)</h3>
-  <input id="imagePrompt" placeholder="Rubuta abinda kake so a hoto..." style="width:75%">
-  <button id="imgBtn">Generate</button>
-  <img id="resultImg" style="display:none">
-
-  <hr>
-
-  <button id="upgradeBtn">Upgrade to Pro 🚀</button>
-
-  <p style="text-align:center;margin-top:10px">
-    <a href="https://chat.whatsapp.com/G4tqlP1R8rFEUQ03BHviuD" target="_blank">
-      👉 Join WhatsApp Group
-    </a>
-  </p>
-</div>
+<button onclick="login()">Login</button>
+<p><a href="/register.html">Create account</a></p>
 
 <script>
-/* ========= ELEMENTS ========= */
-const chat = document.getElementById("chat");
-const msgInput = document.getElementById("msg");
-const sendBtn = document.getElementById("sendBtn");
+async function login() {
+  const email = email.value;
+  const password = password.value;
 
-const imgBtn = document.getElementById("imgBtn");
-const imagePrompt = document.getElementById("imagePrompt");
-const resultImg = document.getElementById("resultImg");
+  const res = await fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
 
-const upgradeBtn = document.getElementById("upgradeBtn");
+  const data = await res.json();
 
-/* ========= EMAIL ========= */
-function getEmail() {
-  let email = localStorage.getItem("email");
-  if (!email) {
-    email = prompt("Shigar da email dinka:");
-    if (!email) return null;
-    localStorage.setItem("email", email);
+  if (data.success) {
+    localStorage.setItem("email", data.email);
+    localStorage.setItem("plan", data.plan);
+    window.location.href = "/chat.html";
+  } else {
+    alert(data.error);
   }
-  return email;
 }
-
-/* ========= CHAT ========= */
-sendBtn.addEventListener("click", async () => {
-  const text = msgInput.value.trim();
-  if (!text) return;
-
-  const email = getEmail();
-  if (!email) return;
-
-  chat.innerHTML += `<div class="msg user"><b>You:</b> ${text}</div>`;
-  msgInput.value = "";
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, email })
-    });
-
-    const data = await res.json();
-    chat.innerHTML += `<div class="msg ai"><b>AI:</b> ${data.reply}</div>`;
-    chat.scrollTop = chat.scrollHeight;
-  } catch {
-    alert("Chat error");
-  }
-});
-
-/* ========= IMAGE (PRO) ========= */
-imgBtn.addEventListener("click", async () => {
-  const prompt = imagePrompt.value.trim();
-  if (!prompt) return alert("Rubuta abinda kake so a hoto");
-
-  const email = getEmail();
-  if (!email) return;
-
-  imgBtn.disabled = true;
-  imgBtn.innerText = "Generating...";
-
-  try {
-    const res = await fetch("/generate-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, email })
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      alert(data.error);
-    } else {
-      resultImg.src = data.image;
-      resultImg.style.display = "block";
-    }
-  } catch {
-    alert("Image generation failed");
-  }
-
-  imgBtn.disabled = false;
-  imgBtn.innerText = "Generate";
-});
-
-/* ========= UPGRADE ========= */
-upgradeBtn.addEventListener("click", async () => {
-  const email = getEmail();
-  if (!email) return;
-
-  upgradeBtn.disabled = true;
-  upgradeBtn.innerText = "Redirecting...";
-
-  try {
-    const res = await fetch("/pay", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, amount: 1000 })
-    });
-
-    const data = await res.json();
-    if (data.link) {
-      window.location.href = data.link;
-    } else {
-      alert("Payment error");
-    }
-  } catch {
-    alert("Network error");
-  }
-
-  upgradeBtn.disabled = false;
-  upgradeBtn.innerText = "Upgrade to Pro 🚀";
-});
 </script>
-
 </body>
 </html>
