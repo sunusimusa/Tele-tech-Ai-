@@ -139,6 +139,51 @@ async function upgrade() {
   const data = await res.json();
   if (data.link) window.location.href = data.link;
 }
+<script>
+const imgBtn = document.getElementById("imgBtn");
+const imagePrompt = document.getElementById("imagePrompt");
+const resultImg = document.getElementById("resultImg");
+
+imgBtn.addEventListener("click", async () => {
+  const promptText = imagePrompt.value.trim();
+  if (!promptText) {
+    alert("Rubuta abinda kake so a hoto");
+    return;
+  }
+
+  let email = localStorage.getItem("email");
+  if (!email) {
+    email = prompt("Shigar da email dinka:");
+    if (!email) return;
+    localStorage.setItem("email", email);
+  }
+
+  imgBtn.disabled = true;
+  imgBtn.innerText = "Generating...";
+
+  try {
+    const res = await fetch("/generate-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: promptText, email })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+    } else {
+      resultImg.src = data.image;
+      resultImg.style.display = "block";
+    }
+
+  } catch (e) {
+    alert("Image generation failed");
+  }
+
+  imgBtn.disabled = false;
+  imgBtn.innerText = "Generate";
+});
 </script>
 </body>
 </html>
