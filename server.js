@@ -151,76 +151,51 @@ app.post("/webhook", (req, res) => {
 
   res.send("OK");
 });
+/* ===== ADMIN AUTH ===== */
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+
 /* ===== ADMIN LOGIN ===== */
 app.post("/admin/login", (req, res) => {
   const { password } = req.body;
 
-  if (password === process.env.ADMIN_PASSWORD) {
-    return res.json({ success: true });
+  if (password === ADMIN_PASSWORD) {
+    return res.json({ token: ADMIN_TOKEN });
   }
 
-  res.status(401).json({ success: false });
-});
-app.post("/admin/login", (req, res) => {
-  const { password } = req.body;
-
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ error: "Wrong password" });
-  }
-
-  res.json({ success: true });
+  res.status(401).json({ error: "Wrong password" });
 });
 
-app.get("/admin/users", (req, res) => {
-  const password = req.headers["x-admin-password"];
-
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ error: "Unauthorized" });
+/* ===== ADMIN MIDDLEWARE ===== */
+function requireAdmin(req, res, next) {
+  const token = req.headers.authorization;
+  if (token !== ADMIN_TOKEN) {
+    return res.status(401).send("Unauthorized");
   }
+  next();
+}
 
+/* ===== GET USERS ===== */
+app.get("/admin/users", requireAdmin, (req, res) => {
   res.json(getUsers());
 });
 
-app.post("/admin/toggle", (req, res) => {
-  if (req.headers.authorization !== "admin-token") {
-    return res.status(401).send("Unauthorized");
-  }
-
+/* ===== TOGGLE USER PLAN ===== */
+app.post("/admin/toggle", requireAdmin, (req, res) => {
   const { email } = req.body;
   let users = getUsers();
 
   const user = users.find(u => u.email === email);
-  if (user) {
-    user.plan = user.plan === "pro" ? "free" : "pro";
-    saveUsers(users);
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
   }
 
-  res.send("OK");
+  user.plan = user.plan === "pro" ? "free" : "pro";
+  saveUsers(users);
+
+  res.json({ success: true });
 });
-/* ===== ADMIN USERS ===== */
-app.post("/admin/users", (req, res) => {
-  const { password } = req.body;
-
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ error: "Wrong password" });
-  }
-
-  res.json(getUsers());
-});
-
-async function loadUsers() {
-  const password = localStorage.getItem("adminPassword");
-
-  const res = await fetch("/admin/users", {
-    headers: {
-      "x-admin-password": password
-    }
-  });
-
-  const users = await res.json();
-  console.log(users);
-}
-
+  
 /* ===== START ===== */
 app.listen(PORT, () => {
   console.log("✅ Server running on port", PORT);
