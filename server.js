@@ -1,11 +1,18 @@
-// ===== IMPORTS =====
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const axios = require("axios");
 const OpenAI = require("openai");
-const fs = require("fs");
 
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+/* ===== OPENAI ===== */
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+/* ===== USERS STORAGE ===== */
 const USERS_FILE = path.join(__dirname, "data", "users.json");
 
 function getUsers() {
@@ -16,65 +23,22 @@ function getUsers() {
 function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
-const app = express();
-const PORT = process.env.PORT || 10000;
 
-// ===== OPENAI =====
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-// ===== MIDDLEWARE =====
+/* ===== MIDDLEWARE ===== */
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// ===== USERS DB =====
-const USERS_FILE = path.join(__dirname, "users.json");
-
-function getUsers() {
-  if (!fs.existsSync(USERS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(USERS_FILE));
-}
-
-function saveUsers(users) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-
-function getUserByEmail(email) {
-  const users = getUsers();
-  return users.find(u => u.email === email);
-}
-
-function makeUserPro(email) {
-  let users = getUsers();
-  let user = users.find(u => u.email === email);
-
-  if (!user) {
-    users.push({
-      email,
-      plan: "pro",
-      upgradedAt: new Date().toISOString()
-    });
-  } else {
-    user.plan = "pro";
-    user.upgradedAt = new Date().toISOString();
-  }
-
-  saveUsers(users);
-}
-
-// ===== CHAT API =====
+/* ===== CHAT API ===== */
 app.post("/chat", async (req, res) => {
   try {
     const { message, email } = req.body;
 
     if (!message || !email) {
-      return res.json({
-        reply: "❌ Missing message or email"
-      });
+      return res.json({ reply: "Missing message or email" });
     }
 
-    const user = getUserByEmail(email);
+    const users = getUsers();
+    const user = users.find(u => u.email === email);
 
     if (!user || user.plan !== "pro") {
       return res.json({
@@ -90,23 +54,18 @@ app.post("/chat", async (req, res) => {
       ]
     });
 
-    res.json({
-      reply: completion.choices[0].message.content
-    });
+    res.json({ reply: completion.choices[0].message.content });
 
   } catch (err) {
     console.error("CHAT ERROR:", err);
-    res.json({ reply: "AI error ❌" });
+    res.json({ reply: "AI error" });
   }
 });
 
-// ===== PAYMENT INIT =====
+/* ===== PAYMENT INIT ===== */
 app.post("/pay", async (req, res) => {
   try {
     const { email, amount } = req.body;
-    if (!email || !amount) {
-      return res.status(400).json({ error: "Missing data" });
-    }
 
     const response = await axios.post(
       "https://api.flutterwave.com/v3/payments",
@@ -114,11 +73,11 @@ app.post("/pay", async (req, res) => {
         tx_ref: "tele_" + Date.now(),
         amount,
         currency: "NGN",
-        redirect_url: "https://tele-tech-ai.onrender.com",
+        redirect_url: "https://tele-tech-ai.onrender.com/success.html",
         customer: { email },
         customizations: {
           title: "Tele Tech AI Pro",
-          description: "Pro upgrade"
+          description: "Pro Subscription"
         }
       },
       {
@@ -137,7 +96,7 @@ app.post("/pay", async (req, res) => {
   }
 });
 
-// ===== FLUTTERWAVE WEBHOOK =====
+/* ===== FLUTTERWAVE WEBHOOK ===== */
 app.post("/webhook", (req, res) => {
   const secretHash = process.env.FLW_WEBHOOK_SECRET;
   const signature = req.headers["verif-hash"];
@@ -148,7 +107,7 @@ app.post("/webhook", (req, res) => {
 
   const event = req.body;
 
-if (
+  if (
     event.event === "charge.completed" &&
     event.data.status === "successful"
   ) {
@@ -160,10 +119,7 @@ if (
     if (user) {
       user.plan = "pro";
     } else {
-      users.push({
-        email: email,
-        plan: "pro"
-      });
+      users.push({ email, plan: "pro" });
     }
 
     saveUsers(users);
@@ -173,7 +129,7 @@ if (
   res.status(200).send("OK");
 });
 
-// ===== START =====
+/* ===== START SERVER ===== */
 app.listen(PORT, () => {
-  console.log("✅ Server running on port " + PORT);
+  console.log("✅ Server running on port", PORT);
 });
