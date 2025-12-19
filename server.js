@@ -7,12 +7,15 @@ const OpenAI = require("openai");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-/* ===== OPENAI ===== */
+/* ================== CONFIG ================== */
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
+/* ================== OPENAI ================== */
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-/* ===== USERS STORAGE ===== */
+/* ================== USERS STORAGE ================== */
 const USERS_FILE = path.join(__dirname, "data", "users.json");
 
 function getUsers() {
@@ -24,16 +27,16 @@ function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-/* ===== MIDDLEWARE ===== */
+/* ================== MIDDLEWARE ================== */
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-/* ===== HOME ===== */
+/* ================== HOME ================== */
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* ===== CHAT ===== */
+/* ================== CHAT ================== */
 app.post("/chat", async (req, res) => {
   try {
     const { message, email } = req.body;
@@ -43,7 +46,12 @@ app.post("/chat", async (req, res) => {
 
     const users = getUsers();
     const user = users.find(u => u.email === email);
-    const isPro = user && user.plan === "pro";
+
+    if (!user || user.plan !== "pro") {
+      return res.json({
+        reply: "❌ Wannan feature na PRO ne. Don Allah ka upgrade."
+      });
+    }
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -53,17 +61,15 @@ app.post("/chat", async (req, res) => {
       ]
     });
 
-    res.json({
-      reply: completion.choices[0].message.content,
-      pro: isPro
-    });
+    res.json({ reply: completion.choices[0].message.content });
+
   } catch (err) {
-    console.error(err);
+    console.error("CHAT ERROR:", err);
     res.json({ reply: "AI error" });
   }
 });
 
-/* ===== IMAGE (PRO) ===== */
+/* ================== IMAGE (PRO) ================== */
 app.post("/generate-image", async (req, res) => {
   try {
     const { prompt, email } = req.body;
@@ -73,61 +79,62 @@ app.post("/generate-image", async (req, res) => {
 
     const users = getUsers();
     const user = users.find(u => u.email === email);
+
     if (!user || user.plan !== "pro") {
-      return res.json({ error: "❌ Wannan feature na PRO ne." });
+      return res.json({
+        error: "❌ Wannan feature na PRO ne. Don Allah ka upgrade."
+      });
     }
 
-    const img = await openai.images.generate({
+    const image = await openai.images.generate({
       model: "gpt-image-1",
       prompt,
       size: "1024x1024"
     });
 
-    res.json({ image: img.data[0].url });
+    res.json({ image: image.data[0].url });
+
   } catch (err) {
-    console.error(err);
+    console.error("IMAGE ERROR:", err);
     res.json({ error: "Image generation failed" });
   }
 });
 
-/* ===== PAYMENT ===== */
+/* ================== PAYMENT ================== */
 app.post("/pay", async (req, res) => {
-  const { email, amount } = req.body;
+  try {
+    const { email, amount } = req.body;
 
-  const response = await axios.post(
-    "https://api.flutterwave.com/v3/payments",
-    {
-      tx_ref: "tele_" + Date.now(),
-      amount,
-      currency: "NGN",
-      redirect_url: "https://tele-tech-ai.onrender.com/",
-      customer: { email }
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`
+    const response = await axios.post(
+      "https://api.flutterwave.com/v3/payments",
+      {
+        tx_ref: "tele_" + Date.now(),
+        amount,
+        currency: "NGN",
+        redirect_url: "https://tele-tech-ai.onrender.com/",
+        customer: { email },
+        customizations: {
+          title: "Tele Tech AI Pro",
+          description: "Pro Subscription"
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
+          "Content-Type": "application/json"
+        }
       }
-    }
-  );
+    );
 
-  res.json({ link: response.data.data.link });
-});
+    res.json({ link: response.data.data.link });
 
-/* ===== ADMIN ===== */
-app.post("/admin/login", (req, res) => {
-  if (req.body.password === ADMIN_PASSWORD) {
-    return res.json({ token: "admin-token" });
+  } catch (err) {
+    console.error("PAY ERROR:", err.message);
+    res.status(500).json({ error: "Payment failed" });
   }
-  res.json({ error: "Wrong password" });
 });
 
-app.get("/admin/users", (req, res) => {
-  if (req.headers.authorization !== "admin-token") {
-/* ===== ADMIN AUTH ===== */
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-let ADMIN_TOKEN = null;
-
-/* ===== ADMIN LOGIN ===== */
+/* ================== ADMIN LOGIN ================== */
 app.post("/admin/login", (req, res) => {
   const { password } = req.body;
 
@@ -138,40 +145,33 @@ app.post("/admin/login", (req, res) => {
   res.status(401).json({ error: "Wrong password" });
 });
 
-/* ===== GET USERS ===== */
+/* ================== ADMIN USERS ================== */
 app.get("/admin/users", (req, res) => {
-  const token = req.headers.authorization;
-
-  if (token !== "admin-token") {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (req.headers.authorization !== "admin-token") {
+    return res.status(401).send("Unauthorized");
   }
-
   res.json(getUsers());
 });
 
-/* ===== TOGGLE USER PLAN ===== */
+/* ================== ADMIN TOGGLE ================== */
 app.post("/admin/toggle", (req, res) => {
-  const token = req.headers.authorization;
+  if (req.headers.authorization !== "admin-token") {
+    return res.status(401).send("Unauthorized");
+  }
+
   const { email } = req.body;
-
-  if (token !== "admin-token") {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
   let users = getUsers();
-  let user = users.find(u => u.email === email);
 
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
+  const user = users.find(u => u.email === email);
+  if (user) {
+    user.plan = user.plan === "pro" ? "free" : "pro";
+    saveUsers(users);
   }
-
-  user.plan = user.plan === "pro" ? "free" : "pro";
-  saveUsers(users);
 
   res.json({ success: true });
 });
 
-/* ===== START ===== */
+/* ================== START ================== */
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log("✅ Server running on port", PORT);
 });
