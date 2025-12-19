@@ -207,6 +207,7 @@ app.post("/admin/users", (req, res) => {
 
   res.json(getUsers());
 });
+
 async function loadUsers() {
   const password = localStorage.getItem("adminPassword");
 
