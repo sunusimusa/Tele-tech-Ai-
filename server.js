@@ -73,7 +73,7 @@ app.post("/pay", async (req, res) => {
         tx_ref: "tele_" + Date.now(),
         amount,
         currency: "NGN",
-        redirect_url: "https://tele-tech-ai.onrender.com/success.html",
+        redirect_url: "https://tele-tech-ai.onrender.com/",
         customer: { email },
         customizations: {
           title: "Tele Tech AI Pro",
