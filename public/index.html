@@ -42,95 +42,110 @@ img { max-width:100%; margin-top:10px; border-radius:8px; }
     </a>
   </p>
 </div>
-
+  
 <script>
 /* ===== ELEMENTS ===== */
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
 const upgradeBtn = document.getElementById("upgradeBtn");
-
 const imgBtn = document.getElementById("imgBtn");
 const imagePrompt = document.getElementById("imagePrompt");
 const resultImg = document.getElementById("resultImg");
 
-/* ===== EMAIL ===== */
-function getEmail() {
-  let email = localStorage.getItem("email");
-  if (!email) {
-    email = prompt("Shigar da email dinka:");
-    if (!email) return null;
-    localStorage.setItem("email", email);
-  }
-  return email;
-}
-
-/* ===== CHAT ===== */
-sendBtn.addEventListener("click", async () => {
+/* ===== SEND CHAT ===== */
+sendBtn.onclick = async () => {
   const text = input.value.trim();
   if (!text) return;
 
-  const email = getEmail();
-  if (!email) return;
+  let email = localStorage.getItem("email");
+  if (!email) {
+    email = prompt("Shigar da email dinka:");
+    if (!email) return;
+    localStorage.setItem("email", email);
+  }
 
-  chat.innerHTML += `<div class="msg user"><b>You:</b> ${text}</div>`;
+  chat.innerHTML += `<div><b>You:</b> ${text}</div>`;
   input.value = "";
 
-  const res = await fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text, email })
-  });
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, email })
+    });
 
-  const data = await res.json();
-  chat.innerHTML += `<div class="msg ai"><b>AI:</b> ${data.reply}</div>`;
-});
+    const data = await res.json();
+    chat.innerHTML += `<div><b>AI:</b> ${data.reply}</div>`;
+  } catch {
+    alert("Chat error");
+  }
+};
 
-/* ===== IMAGE GENERATOR ===== */
-imgBtn.addEventListener("click", async () => {
-  const prompt = imagePrompt.value.trim();
-  if (!prompt) return alert("Rubuta prompt");
+/* ===== IMAGE GENERATOR (PRO) ===== */
+imgBtn.onclick = async () => {
+  const promptText = imagePrompt.value.trim();
+  if (!promptText) {
+    alert("Rubuta abinda kake so a hoto");
+    return;
+  }
 
-  const email = getEmail();
-  if (!email) return;
+  let email = localStorage.getItem("email");
+  if (!email) {
+    email = prompt("Shigar da email dinka:");
+    if (!email) return;
+    localStorage.setItem("email", email);
+  }
 
   imgBtn.disabled = true;
   imgBtn.innerText = "Generating...";
 
-  const res = await fetch("/generate-image", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, email })
-  });
+  try {
+    const res = await fetch("/generate-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: promptText, email })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.error) {
-    alert(data.error);
-  } else {
-    resultImg.src = data.image;
-    resultImg.style.display = "block";
+    if (data.error) {
+      alert(data.error);
+    } else {
+      resultImg.src = data.image;
+      resultImg.style.display = "block";
+    }
+  } catch {
+    alert("Image generation failed");
   }
 
   imgBtn.disabled = false;
   imgBtn.innerText = "Generate";
-});
+};
 
 /* ===== UPGRADE ===== */
-upgradeBtn.addEventListener("click", async () => {
-  const email = getEmail();
-  if (!email) return;
+upgradeBtn.onclick = async () => {
+  let email = localStorage.getItem("email");
+  if (!email) {
+    email = prompt("Enter your email:");
+    if (!email) return;
+    localStorage.setItem("email", email);
+  }
 
-  upgradeBtn.innerText = "Redirecting...";
-  const res = await fetch("/pay", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, amount: 1000 })
-  });
+  try {
+    const res = await fetch("/pay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, amount: 1000 })
+    });
 
-  const data = await res.json();
-  if (data.link) window.location.href = data.link;
-});
+    const data = await res.json();
+    if (data.link) window.location.href = data.link;
+  } catch {
+    alert("Payment error");
+  }
+};
 </script>
+  
 </body>
 </html>
