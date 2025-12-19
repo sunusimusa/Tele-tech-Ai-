@@ -97,11 +97,16 @@ app.post("/pay", async (req, res) => {
 });
 
 /* ===== FLUTTERWAVE WEBHOOK ===== */
-app.post("/webhook", (req, res) => {
+app.post("/webhook", express.json(), (req, res) => {
   const secretHash = process.env.FLW_WEBHOOK_SECRET;
   const signature = req.headers["verif-hash"];
 
+  console.log("📩 WEBHOOK RECEIVED");
+  console.log("Signature:", signature);
+  console.log("Body:", req.body);
+
   if (!signature || signature !== secretHash) {
+    console.log("❌ Invalid webhook signature");
     return res.status(401).send("Invalid signature");
   }
 
@@ -123,12 +128,12 @@ app.post("/webhook", (req, res) => {
     }
 
     saveUsers(users);
-    console.log("✅ User upgraded to PRO:", email);
+
+    console.log("✅ USER UPGRADED TO PRO:", email);
   }
 
   res.status(200).send("OK");
 });
-
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log("✅ Server running on port", PORT);
