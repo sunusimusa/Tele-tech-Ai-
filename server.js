@@ -168,6 +168,22 @@ app.get("/admin/users", (req, res) => {
 
   res.json(getUsers());
 });
+app.post("/admin/toggle", (req, res) => {
+  if (req.headers.authorization !== "admin-token") {
+    return res.status(401).send("Unauthorized");
+  }
+
+  const { email } = req.body;
+  let users = getUsers();
+
+  const user = users.find(u => u.email === email);
+  if (user) {
+    user.plan = user.plan === "pro" ? "free" : "pro";
+    saveUsers(users);
+  }
+
+  res.send("OK");
+});
 
 /* ===== START ===== */
 app.listen(PORT, () => {
