@@ -150,7 +150,16 @@ app.post("/webhook", (req, res) => {
 
   res.send("OK");
 });
+/* ===== ADMIN LOGIN ===== */
+app.post("/admin/login", (req, res) => {
+  const { password } = req.body;
 
+  if (password === process.env.ADMIN_PASSWORD) {
+    return res.json({ success: true });
+  }
+
+  res.status(401).json({ success: false });
+});
 /* ===== START ===== */
 app.listen(PORT, () => {
   console.log("✅ Server running on port", PORT);
