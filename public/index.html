@@ -13,6 +13,7 @@ body { font-family: Arial; background:#f4f6f9; }
 .user { color:#007bff; }
 .ai { color:#000; }
 img { max-width:100%; margin-top:10px; border-radius:8px; }
+button { margin-top:5px; }
 </style>
 </head>
 
@@ -42,9 +43,9 @@ img { max-width:100%; margin-top:10px; border-radius:8px; }
     </a>
   </p>
 </div>
-  
+
 <script>
-/* ================== ELEMENTS ================== */
+/* ========= ELEMENTS ========= */
 const chat = document.getElementById("chat");
 const msgInput = document.getElementById("msg");
 const sendBtn = document.getElementById("sendBtn");
@@ -55,7 +56,7 @@ const resultImg = document.getElementById("resultImg");
 
 const upgradeBtn = document.getElementById("upgradeBtn");
 
-/* ================== EMAIL ================== */
+/* ========= EMAIL ========= */
 function getEmail() {
   let email = localStorage.getItem("email");
   if (!email) {
@@ -66,7 +67,7 @@ function getEmail() {
   return email;
 }
 
-/* ================== CHAT ================== */
+/* ========= CHAT ========= */
 sendBtn.addEventListener("click", async () => {
   const text = msgInput.value.trim();
   if (!text) return;
@@ -74,7 +75,7 @@ sendBtn.addEventListener("click", async () => {
   const email = getEmail();
   if (!email) return;
 
-  chat.innerHTML += `<div><b>You:</b> ${text}</div>`;
+  chat.innerHTML += `<div class="msg user"><b>You:</b> ${text}</div>`;
   msgInput.value = "";
 
   try {
@@ -85,19 +86,17 @@ sendBtn.addEventListener("click", async () => {
     });
 
     const data = await res.json();
-    chat.innerHTML += `<div><b>AI:</b> ${data.reply}</div>`;
+    chat.innerHTML += `<div class="msg ai"><b>AI:</b> ${data.reply}</div>`;
+    chat.scrollTop = chat.scrollHeight;
   } catch {
     alert("Chat error");
   }
 });
 
-/* ================== IMAGE (PRO) ================== */
+/* ========= IMAGE (PRO) ========= */
 imgBtn.addEventListener("click", async () => {
   const prompt = imagePrompt.value.trim();
-  if (!prompt) {
-    alert("Rubuta abinda kake so a hoto");
-    return;
-  }
+  if (!prompt) return alert("Rubuta abinda kake so a hoto");
 
   const email = getEmail();
   if (!email) return;
@@ -128,7 +127,7 @@ imgBtn.addEventListener("click", async () => {
   imgBtn.innerText = "Generate";
 });
 
-/* ================== UPGRADE ================== */
+/* ========= UPGRADE ========= */
 upgradeBtn.addEventListener("click", async () => {
   const email = getEmail();
   if (!email) return;
@@ -144,17 +143,19 @@ upgradeBtn.addEventListener("click", async () => {
     });
 
     const data = await res.json();
-    if (data.link) window.location.href = data.link;
-    else alert("Payment error");
+    if (data.link) {
+      window.location.href = data.link;
+    } else {
+      alert("Payment error");
+    }
   } catch {
     alert("Network error");
   }
 
   upgradeBtn.disabled = false;
-  upgradeBtn.innerText = "Upgrade to Pro
-  🚀";
-  });
- </script>
-  
+  upgradeBtn.innerText = "Upgrade to Pro 🚀";
+});
+</script>
+
 </body>
 </html>
