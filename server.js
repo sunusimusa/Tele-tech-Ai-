@@ -26,8 +26,8 @@ function saveUsers(users) {
 
 /* ===== MIDDLEWARE ===== */
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+app.use(express.static(path.join(__dirname, "public"))); 
+process.env.ADMIN_PASSWORD || "admin123";
 
 /* ===== HOME ===== */
 app.get("/", (req, res) => {
