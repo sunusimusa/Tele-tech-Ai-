@@ -27,23 +27,21 @@ input, button { padding:8px; margin:5px 0; width:100%; }
   <button onclick="loadUsers()">Load Users</button>
   <div id="users"></div>
 </div>
-
 <script>
 let token = "";
 
 function login() {
   const pass = document.getElementById("adminPass").value;
-  if (!pass) return alert("Enter admin password");
 
   fetch("/admin/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password: pass })
   })
-  .then(r => r.json())
-  .then(d => {
-    if (d.token) {
-      token = d.token;
+  .then(res => res.json())
+  .then(data => {
+    if (data.token) {
+      token = data.token;
       alert("Admin logged in ✅");
     } else {
       alert("Wrong password ❌");
@@ -53,22 +51,22 @@ function login() {
 
 function loadUsers() {
   fetch("/admin/users", {
-    headers: { "Authorization": token }
+    headers: {
+      "Authorization": token
+    }
   })
-  .then(r => r.json())
+  .then(res => res.json())
   .then(users => {
     const div = document.getElementById("users");
     div.innerHTML = "";
 
     users.forEach(u => {
       div.innerHTML += `
-        <div class="user">
+        <div>
           ${u.email} —
-          <span class="${u.plan === "pro" ? "pro" : "free"}">
-            ${u.plan.toUpperCase()}
-          </span>
+          <b>${u.plan}</b>
           <button onclick="togglePlan('${u.email}')">
-            Toggle Plan
+            Toggle
           </button>
         </div>
       `;
@@ -88,5 +86,6 @@ function togglePlan(email) {
   .then(() => loadUsers());
 }
 </script>
+
 </body>
 </html>
