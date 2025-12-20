@@ -161,7 +161,7 @@ app.post("/generate", (req, res) => {
   // ✅ DAILY LIMIT CHECK
   if (user.plan === "free" && user.dailyCount >= 5) {
     return res.status(403).json({
-      error: "Daily free limit reached. Watch an ad or upgrade to Pro."
+      error: "Daily free limit reached. Upgrade to Pro."
     });
   }
 
@@ -170,9 +170,16 @@ app.post("/generate", (req, res) => {
   user.lastUsed = new Date().toISOString().slice(0, 10);
   saveUsers(users);
 
+  // ✅ AI IMAGE URL (Pollinations)
+  const imageUrl =
+    "https://image.pollinations.ai/prompt/" +
+    encodeURIComponent(prompt);
+
   res.json({
     success: true,
-    remaining: user.plan === "free" ? 5 - user.dailyCount : "unlimited"
+    image: imageUrl,
+    remaining:
+      user.plan === "free" ? 5 - user.dailyCount : "unlimited"
   });
 });
 
