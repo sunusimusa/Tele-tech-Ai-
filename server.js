@@ -87,6 +87,18 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ success: false, error: "Server error" });
   }
 });
+app.post("/generate", (req, res) => {
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    return res.json({ error: "No prompt provided" });
+  }
+
+  // TEMP: fake image (test only)
+  res.json({
+    image: "https://via.placeholder.com/512?text=AI+Image"
+  });
+});
 
 /* ===== START ===== */
 app.listen(PORT, () => {
