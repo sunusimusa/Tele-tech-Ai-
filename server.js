@@ -103,6 +103,22 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ success: false, error: "Server error" });
   }
 });
+app.post("/verify", (req, res) => {
+  const { email } = req.body;
+
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  user.verified = true;
+  saveUsers(users);
+
+  res.json({ success: true });
+});
+
 app.post("/generate", (req, res) => {
   const { email, prompt } = req.body;
 
