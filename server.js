@@ -33,25 +33,25 @@ app.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.json({ success: false, error: "Missing data" });
+    return res.json({ success: false, error: "Missing fields" });
   }
 
   const users = getUsers();
+
   if (users.find(u => u.email === email)) {
-    return res.json({ success: false, error: "Email already exists" });
+    return res.json({ success: false, error: "User already exists" });
   }
 
-  const hash = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   users.push({
     email,
-    password: hash,
-    plan: "free",
-    usage: 0,
-    lastUse: ""
+    password: hashedPassword,
+    plan: "free"
   });
 
   saveUsers(users);
+
   res.json({ success: true });
 });
 
