@@ -85,7 +85,9 @@ app.post("/login", async (req, res) => {
     plan: user.plan
   });
 });
-
+app.get("/chat", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "chat.html"));
+});
 /* ========= START ========= */
 app.listen(PORT, () => {
   console.log("✅ Server running on port", PORT);
