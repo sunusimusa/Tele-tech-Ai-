@@ -21,28 +21,25 @@
 </p>
 
 <script>
-async function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  const email = localStorage.getItem("email"); // 👈 MUHIMMI
 
-  if (!email || !password) {
-    document.getElementById("msg").innerText = "Cika email da password";
-    return;
-  }
-
-  const res = await fetch("/login", {
+  const res = await fetch("/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({
+      prompt,
+      email
+    })
   });
 
   const data = await res.json();
 
-  if (data.success) {
-    localStorage.setItem("email", data.email);
-    window.location.href = "/dashboard.html";
+  if (data.error) {
+    alert(data.error);
   } else {
-    document.getElementById("msg").innerText = data.error;
+    alert("Generated! Remaining: " + data.remaining);
   }
 }
 </script>
