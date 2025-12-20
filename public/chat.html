@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Tele Tech AI</title>
+  <title>Tele Tech AI Chat</title>
 </head>
 <body>
 
@@ -10,27 +10,27 @@
 
 <div id="chat"></div>
 
-<input id="msg" placeholder="Type message">
+<input id="msg" placeholder="Rubuta sakonka">
 <button onclick="sendMsg()">Send</button>
 
 <script>
-const token = localStorage.getItem("token");
-
-if (!token) {
+const email = localStorage.getItem("email");
+if (!email) {
   alert("Please login first");
   window.location.href = "/";
 }
 
 async function sendMsg() {
-  const text = document.getElementById("msg").value;
+  const msg = document.getElementById("msg").value;
+  if (!msg) return;
+
+  document.getElementById("chat").innerHTML += `<p><b>You:</b> ${msg}</p>`;
+  document.getElementById("msg").value = "";
 
   const res = await fetch("/chat", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
-    },
-    body: JSON.stringify({ message: text })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: msg, email })
   });
 
   const data = await res.json();
