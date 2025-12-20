@@ -1,1 +1,17 @@
-
+{
+  "name": "tele-image-ai",
+  "version": "1.0.0",
+  "description": "AI Image Generator with Login & Daily Limit",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "axios": "^1.7.9",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "openai": "^4.28.0"
+  }
+}
