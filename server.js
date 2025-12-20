@@ -1,116 +1,86 @@
 const express = require("express");
-const path = require("path");
 const fs = require("fs");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-/* ========= CONFIG ========= */
-const JWT_SECRET = process.env.JWT_SECRET || "jwt_secret_123";
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-/* ========= USERS FILE ========= */
+// 🔑 SERVE PUBLIC FOLDER
+app.use(express.static(path.join(__dirname, "public")));
+
+// 📁 USERS FILE
 const USERS_FILE = path.join(__dirname, "data", "users.json");
 
-function getUsers() {
+function loadUsers() {
   if (!fs.existsSync(USERS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+  return JSON.parse(fs.readFileSync(USERS_FILE));
 }
 
 function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-/* ========= MIDDLEWARE ========= */
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-const path = require("path");
-
-app.use(express.json());
-app.use(express.static("public"));
-
-/* ========= PAGES ========= */
+// 🏠 LOGIN PAGE
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.get("/register.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "register.html"));
-});
-
-app.get("/chat.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "chat.html"));
-});
-
-/* ========= REGISTER ========= */
-app.post("/register", async (req, res) => {
+// 📝 REGISTER
+app.post("/register", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.json({ error: "Missing email or password" });
+    return res.json({ error: "All fields required" });
   }
 
-  const users = getUsers();
+  const users = loadUsers();
   if (users.find(u => u.email === email)) {
     return res.json({ error: "User already exists" });
   }
 
-  const hashed = await bcrypt.hash(password, 10);
-
-  users.push({
-    email,
-    password: hashed,
-    plan: "free"
-  });
-
+  users.push({ email, password });
   saveUsers(users);
+
   res.json({ success: true });
 });
 
-/* ========= LOGIN ========= */
-app.post("/login", async (req, res) => {
+// 🔐 LOGIN
+app.post("/login", (req, res) => {
   const { email, password } = req.body;
+  const users = loadUsers();
 
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
+  const user = users.find(
+    u => u.email === email && u.password === password
+  );
 
   if (!user) {
-    return res.json({ success: false, error: "User not found" });
+    return res.json({ error: "Invalid login" });
   }
 
-  const ok = await bcrypt.compare(password, user.password);
-  if (!ok) {
-    return res.json({ success: false, error: "Wrong password" });
-  }
-
-  res.json({
-    success: true,
-    email: user.email,
-    plan: user.plan
-  });
+  res.json({ success: true, email });
 });
-app.post("/chat", async (req, res) => {
-  try {
-    const { message, email } = req.body;
 
-    if (!message) {
-      return res.json({ reply: "No message received" });
-    }
-
-    // TEST RESPONSE (domin mu tabbatar yana aiki)
-    return res.json({
-      reply: "Na karɓi saƙonka: " + message
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ reply: "Server error" });
-  }
-});
+// 💬 CHAT PAGE (WANNAN NE MUHIMMI)
 app.get("/chat", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "chat.html"));
 });
-/* ========= START ========= */
+
+// 🤖 CHAT API (TEST RESPONSE)
+app.post("/chat", (req, res) => {
+  const { message } = req.body;
+
+  if (!message) {
+    return res.json({ reply: "No message received" });
+  }
+
+  res.json({
+    reply: "Na karɓi saƙonka: " + message
+  });
+});
+
+// 🚀 START SERVER
 app.listen(PORT, () => {
-  console.log("✅ Server running on port", PORT);
+  console.log("✅ Server running on port " + PORT);
 });
