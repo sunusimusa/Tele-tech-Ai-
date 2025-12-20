@@ -61,31 +61,31 @@ app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email da password suna bukata" });
+      return res.json({ success: false, error: "Email da password suna da muhimmanci" });
     }
 
-    const users = readUsers(); // function ɗin da kake amfani da shi a register
+    const users = getUsers();
     const user = users.find(u => u.email === email);
 
     if (!user) {
-      return res.status(401).json({ error: "Account bai wanzu ba" });
+      return res.json({ success: false, error: "User not found" });
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ error: "Password ba daidai ba" });
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) {
+      return res.json({ success: false, error: "Wrong password" });
     }
 
-    return res.json({
+    res.json({
       success: true,
-      email: user.email
+      email: user.email,
+      plan: user.plan || "free"
     });
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    return res.status(500).json({ error: "Server error" });
+    res.status(500).json({ success: false, error: "Server error" });
   }
-});
 });
 
 /* ===== START ===== */
