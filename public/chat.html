@@ -8,33 +8,24 @@
 
 <h2>Tele Tech AI Chat</h2>
 
+<input id="msg" placeholder="Rubuta sakonka">
+<button onclick="send()">Send</button>
+
 <div id="chat"></div>
 
-<input id="msg" placeholder="Rubuta sakonka">
-<button onclick="sendMsg()">Send</button>
-
 <script>
-const email = localStorage.getItem("email");
-if (!email) {
-  alert("Please login first");
-  window.location.href = "/chat.html";
-}
-
-async function sendMsg() {
+async function send() {
   const msg = document.getElementById("msg").value;
-  if (!msg) return;
-
-  document.getElementById("chat").innerHTML += `<p><b>You:</b> ${msg}</p>`;
-  document.getElementById("msg").value = "";
 
   const res = await fetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg, email })
+    body: JSON.stringify({ message: msg })
   });
 
   const data = await res.json();
-  document.getElementById("chat").innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
+  document.getElementById("chat").innerHTML +=
+    "<p><b>AI:</b> " + data.reply + "</p>";
 }
 </script>
 
