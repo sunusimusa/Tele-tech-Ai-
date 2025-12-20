@@ -25,6 +25,10 @@ function saveUsers(users) {
 /* ========= MIDDLEWARE ========= */
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+const path = require("path");
+
+app.use(express.json());
+app.use(express.static("public"));
 
 /* ========= PAGES ========= */
 app.get("/", (req, res) => {
