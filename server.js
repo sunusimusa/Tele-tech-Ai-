@@ -103,23 +103,8 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ success: false, error: "Server error" });
   }
 });
-function canGenerate(user) {
-  const today = new Date().toISOString().slice(0, 10);
-
-  if (user.lastUsed !== today) {
-    user.lastUsed = today;
-    user.dailyCount = 0;
-  }
-
-  if (user.plan === "free" && user.dailyCount >= 5) {
-    return false;
-  }
-
-  return true;
-}
-
 app.post("/generate", (req, res) => {
-  const { email } = req.body;
+  const { email, prompt } = req.body;
 
   const users = getUsers();
   const user = users.find(u => u.email === email);
@@ -128,20 +113,29 @@ app.post("/generate", (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  if (!canGenerate(user)) {
+  // ✅ VERIFY CHECK
+  if (!user.verified) {
+    return res.status(403).json({
+      error: "Please verify your account to continue"
+    });
+  }
+
+  // ✅ DAILY LIMIT CHECK
+  if (user.plan === "free" && user.dailyCount >= 5) {
     return res.status(403).json({
       error: "Daily free limit reached. Upgrade to Pro."
     });
   }
 
+  // ✅ COUNT
   user.dailyCount += 1;
+  user.lastUsed = new Date().toISOString().slice(0, 10);
   saveUsers(users);
 
   res.json({
     success: true,
-    message: "Image generated",
-    remaining:
-      user.plan === "free" ? 5 - user.dailyCount : "unlimited"
+    imageUrl: "https://via.placeholder.com/300",
+    remaining: user.plan === "free" ? 5 - user.dailyCount : "unlimited"
   });
 });
 
