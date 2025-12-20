@@ -57,25 +57,35 @@ app.post("/register", async (req, res) => {
 
 /* ===== LOGIN ===== */
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email da password suna bukata" });
+    }
 
-  if (!user) {
-    return res.json({ success: false, error: "User not found" });
+    const users = readUsers(); // function ɗin da kake amfani da shi a register
+    const user = users.find(u => u.email === email);
+
+    if (!user) {
+      return res.status(401).json({ error: "Account bai wanzu ba" });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ error: "Password ba daidai ba" });
+    }
+
+    return res.json({
+      success: true,
+      email: user.email
+    });
+
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({ error: "Server error" });
   }
-
-  const ok = await bcrypt.compare(password, user.password);
-  if (!ok) {
-    return res.json({ success: false, error: "Wrong password" });
-  }
-
-  res.json({
-    success: true,
-    email: user.email,
-    plan: user.plan
-  });
+});
 });
 
 /* ===== START ===== */
