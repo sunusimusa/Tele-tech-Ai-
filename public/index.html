@@ -45,6 +45,25 @@ async function generateImage() {
     alert("Generated! Remaining: " + data.remaining);
   }
 }
+  
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  const email = localStorage.getItem("email");
+
+  const res = await fetch("/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, email })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    alert(data.error);
+  } else {
+    alert("Generated! Remaining: " + data.remaining);
+  }
+}
 </script>
 
 </body>
