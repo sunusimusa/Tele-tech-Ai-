@@ -2,70 +2,41 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Tele Tech AI – Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body { font-family: Arial; background:#f4f6f9; }
-    .box { max-width:600px; margin:20px auto; background:#fff; padding:15px; border-radius:8px; }
-    #chat { min-height:250px; border:1px solid #ccc; padding:10px; margin-bottom:10px; overflow-y:auto; }
-    .user { color:#007bff; margin-bottom:6px; }
-    .ai { color:#000; margin-bottom:6px; }
-  </style>
+  <title>Tele Tech AI</title>
 </head>
-
 <body>
-<div class="box">
-  <h2>Tele Tech AI</h2>
 
-  <div id="chat"></div>
+<h2>Tele Tech AI Chat</h2>
 
-  <input id="msg" placeholder="Rubuta sakonka..." style="width:75%">
-  <button onclick="sendMsg()">Send</button>
+<div id="chat"></div>
 
-  <hr>
-
-  <button onclick="logout()">Logout</button>
-</div>
+<input id="msg" placeholder="Type message">
+<button onclick="sendMsg()">Send</button>
 
 <script>
-/* ===== LOGIN CHECK ===== */
-const email = localStorage.getItem("email");
-if (!email) {
+const token = localStorage.getItem("token");
+
+if (!token) {
   alert("Please login first");
   window.location.href = "/";
 }
 
-/* ===== CHAT ===== */
 async function sendMsg() {
-  const msg = document.getElementById("msg").value.trim();
-  if (!msg) return;
+  const text = document.getElementById("msg").value;
 
-  document.getElementById("chat").innerHTML +=
-    `<div class="user"><b>You:</b> ${msg}</div>`;
-  document.getElementById("msg").value = "";
+  const res = await fetch("/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ message: text })
+  });
 
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: msg, email })
-    });
-
-    const data = await res.json();
-
-    document.getElementById("chat").innerHTML +=
-      `<div class="ai"><b>AI:</b> ${data.reply}</div>`;
-  } catch {
-    alert("Chat error");
-  }
-}
-
-/* ===== LOGOUT ===== */
-function logout() {
-  localStorage.clear();
-  window.location.href = "/";
+  const data = await res.json();
+  document.getElementById("chat").innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
 }
 </script>
+
 </body>
 </html>
