@@ -1,36 +1,27 @@
 const TelegramBot = require("node-telegram-bot-api");
 const fetch = require("node-fetch");
 
-// 🔐 Token daga Render ENV
+// 🔐 Token
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-// 🌐 API na Tele-tech-AI
+// 🌍 API URL na backend ɗinka
 const API_URL = "https://tele-tech-ai.onrender.com/generate";
 
-// 🛑 Idan babu token, kada a fara bot
-if (!TOKEN) {
-  console.error("❌ TELEGRAM_BOT_TOKEN not set");
-  process.exit(1);
-}
+// ✅ START BOT (POLLING SAU ƊAYA KAWAI)
+const bot = new TelegramBot(TOKEN, { polling: true });
 
-// ✅ FARA BOT (POLLING KADAI – SAU 1)
-const bot = new TelegramBot(TOKEN, {
-  polling: {
-    interval: 1000,
-    autoStart: true
-  }
-});
+console.log("🤖 Telegram bot is running...");
 
 // /start
-bot.onText(/^\/start$/, (msg) => {
+bot.onText(/^\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "👋 Welcome to *Tele Image AI*\n\n🎨 Aiko da rubutu (prompt) domin a ƙirƙiri hoto.\n\nMisali:\n`A realistic lion wearing a crown`",
+    "👋 Welcome to *Tele Image AI*\n\n🎨 Turo rubutu (prompt) domin a ƙirƙiri hoto.",
     { parse_mode: "Markdown" }
   );
 });
 
-// Karɓar prompt
+// Receive prompt
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const prompt = msg.text;
@@ -52,8 +43,7 @@ bot.on("message", async (msg) => {
     const data = await res.json();
 
     if (data.error) {
-      await bot.sendMessage(chatId, "❌ " + data.error);
-      return;
+      return bot.sendMessage(chatId, "❌ " + data.error);
     }
 
     await bot.sendPhoto(chatId, data.image, {
@@ -62,8 +52,6 @@ bot.on("message", async (msg) => {
 
   } catch (err) {
     console.error(err);
-    await bot.sendMessage(chatId, "⚠️ Server error, try again later");
+    bot.sendMessage(chatId, "⚠️ Server error, try again later");
   }
 });
-
-console.log("🤖 Telegram bot is running...");
