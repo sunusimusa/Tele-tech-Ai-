@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const OpenAI = require("openai");
+
 const db = require("./db");
 
 const app = express();
