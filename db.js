@@ -5,7 +5,6 @@ const db = new sqlite3.Database(
   path.join(__dirname, "database.sqlite")
 );
 
-// CREATE TABLES
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
