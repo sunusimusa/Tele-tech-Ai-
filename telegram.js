@@ -1,21 +1,29 @@
 const TelegramBot = require("node-telegram-bot-api");
 const fetch = require("node-fetch");
 
+// 🔐 Telegram Bot Token
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+
+// 🌍 API URL na Tele-tech-AI
 const API_URL = "https://tele-tech-ai.onrender.com/generate";
 
-// ✅ KA BAR WANNAN KADAI
-const bot = new TelegramBot(TOKEN, { polling: true });
+// ✅ START BOT (POLLING ƊAYA KAWAI)
+const bot = new TelegramBot(TOKEN, {
+  polling: {
+    interval: 300,
+    autoStart: true
+  }
+});
 
-// /start
+// 👋 /start command
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "👋 Welcome to Tele Image AI!\n\n🎨 Send a text to generate image"
+    "👋 Welcome to Tele Image AI!\n\n🎨 Send any text prompt to generate an image."
   );
 });
 
-// receive prompt
+// 🎨 Receive prompt
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const prompt = msg.text;
@@ -29,7 +37,7 @@ bot.on("message", async (msg) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: "telegram@user.com",
+        email: `telegram_${chatId}@user.com`,
         prompt
       })
     });
@@ -46,6 +54,7 @@ bot.on("message", async (msg) => {
     });
 
   } catch (err) {
+    console.error(err);
     await bot.sendMessage(chatId, "⚠️ Server error, try again later");
   }
 });
