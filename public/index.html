@@ -74,6 +74,24 @@ async function verifyAccount() {
     alert(data.error || "Verification failed");
   }
 } 
+
+  async function watchAd() {
+    const email = localStorage.getItem("email");
+
+    const res = await fetch("/watch-ad", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+    } else {
+      alert("✅ Ad watched! You got +1 image");
+    }
+  }
 </script>
 
 </body>
