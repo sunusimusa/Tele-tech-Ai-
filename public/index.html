@@ -61,7 +61,7 @@
   <div class="row">
     <input
       id="prompt"
-      placeholder="Describe image (e.g. a cat wearing sunglasses)"
+      placeholder="Describe image (e.g. a dog wearing glasses)"
     />
     <button onclick="generateImage()">Generate</button>
   </div>
@@ -116,25 +116,29 @@ async function generateImage() {
   status.innerText = "🎨 Generating image...";
   img.style.display = "none";
 
-  const res = await fetch("/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, prompt })
-  });
+  try {
+    const res = await fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, prompt })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.error) {
-    status.innerText = "❌ " + data.error;
-    return;
+    if (data.error) {
+      status.innerText = "❌ " + data.error;
+      return;
+    }
+
+    img.src = data.image;
+    img.style.display = "block";
+    status.innerText =
+      "✅ Image generated. Remaining: " +
+      (data.remaining === null ? "unlimited" : data.remaining);
+
+  } catch (err) {
+    status.innerText = "❌ Server error, try again";
   }
-
-  img.src = data.image;
-  img.style.display = "block";
-
-  status.innerText =
-    "✅ Image generated. Remaining: " +
-    (data.remaining === null ? "unlimited" : data.remaining);
 }
 
 /* =========================
@@ -153,7 +157,7 @@ async function verifyAccount() {
   const data = await res.json();
 
   if (data.success) {
-    alert("✅ Account verified successfully!");
+    alert("✅ Account verified!");
   } else {
     alert(data.error || "Verification failed");
   }
