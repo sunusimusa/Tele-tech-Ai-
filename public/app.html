@@ -1,1 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tele Image AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+    }
+
+    .box {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: gray;
+    }
+
+    #resultImage {
+      max-width: 100%;
+      display: none;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🖼️ Tele Image AI</h2>
+
+  <!-- AUTH -->
+  <div id="authBox">
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
+
+    <p id="authStatus" class="status"></p>
+  </div>
+
+  <hr>
+
+  <!-- IMAGE GENERATOR -->
+  <div id="appBox" style="display:none;">
+    <p id="userStatus" class="status"></p>
+
+    <input id="prompt" placeholder="Describe the image you want">
+    <button onclick="generateImage()">Generate Image</button>
+
+    <img id="resultImage">
+
+    <p id="genStatus" class="status"></p>
+
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<script>
+/* ================= AUTH ================= */
+
+function saveSession(email, plan) {
+  localStorage.setItem("email", email);
+  localStorage.setItem("plan", plan);
+}
+
+function getEmail() {
+  return localStorage.getItem("email");
+}
+
+function logout() {
+  localStorage.clear();
+  location.reload();
+}
+
+async function register() {
+  const email = email.value;
+  const password = password.value;
+
+  const res = await fetch("/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  document.getElementById("authStatus").innerText =
+    data.success ? "✅ Registered successfully" : data.error;
+}
+
+async function login() {
+  const emailVal = email.value;
+  const passwordVal = password.value;
+
+  const res = await fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: emailVal, password: passwordVal })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    saveSession(data.email, data.plan);
+    showApp();
+  } else {
+    document.getElementById("authStatus").innerText = data.error;
+  }
+}
+
+/* ================= APP ================= */
+
+function showApp() {
+  document.getElementById("authBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
+
+  const plan = localStorage.getItem("plan");
+  document.getElementById("userStatus").innerText =
+    plan === "pro"
+      ? "🌟 PRO user – Unlimited images"
+      : "🆓 Free user – 5 images per day";
+}
+
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  const email = getEmail();
+
+  if (!prompt) {
+    alert("Enter image description");
+    return;
+  }
+
+  document.getElementById("genStatus").innerText = "⏳ Generating...";
+
+  const res = await fetch("/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, prompt })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    document.getElementById("genStatus").innerText = "❌ " + data.error;
+    return;
+  }
+
+  document.getElementById("resultImage").src = data.image;
+  document.getElementById("resultImage").style.display = "block";
+  document.getElementById("genStatus").innerText =
+    "✅ Done. Remaining: " + data.remaining;
+}
+
+/* ================= AUTO LOGIN ================= */
+
+if (getEmail()) {
+  showApp();
+}
+</script>
+
+</body>
+</html>
