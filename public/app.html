@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Tele Image AI</title>
 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    input {
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    #resultImage {
+      margin-top: 15px;
+      max-width: 100%;
+      display: none;
+      border-radius: 6px;
+    }
+
+    .link {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Login</h2>
+
+  <!-- PROMPT -->
+  <div class="row">
+    <input id="prompt" placeholder="Describe image (e.g. a dog wearing glasses)" />
+    <button onclick="generateImage()">Generate</button>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="row">
+    <button onclick="verifyAccount()">Verify Account</button>
+    <button onclick="watchAd()">Watch Ad (+1 Image)</button>
+    <button onclick="upgradePro()">Upgrade to PRO 🚀</button>
+  </div>
+
+  <!-- STATUS -->
+  <div id="status"></div>
+
+  <!-- RESULT IMAGE -->
+  <img id="resultImage" />
+
+  <div class="link">
+    Ba ka da account? <a href="/register.html">Create account</a>
+  </div>
+
+<script>
+/* =========================
+   HELPERS
+========================= */
+function getEmail() {
+  const email = localStorage.getItem("email");
+  if (!email) {
+    alert("Please login first");
+    return null;
+  }
+  return email;
+}
+
+/* =========================
+   GENERATE IMAGE
+========================= */
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  const status = document.getElementById("status");
+  const img = document.getElementById("resultImage");
+
+  const email = getEmail();
+  if (!email) return;
+
+  status.innerText = "🎨 Generating image...";
+  img.style.display = "none";
+
+  const res = await fetch("/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, prompt })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    status.innerText = "❌ " + data.error;
+    return;
+  }
+
+  img.src = data.image;
+  img.style.display = "block";
+  status.innerText = "✅ Image generated. Remaining: " + data.remaining;
+}
+
+/* =========================
+   VERIFY
+========================= */
+async function verifyAccount() {
+  const email = getEmail();
+  if (!email) return;
+
+  const res = await fetch("/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("✅ Account verified!");
+  } else {
+    alert(data.error || "Verification failed");
+  }
+}
+
+/* =========================
+   WATCH AD
+========================= */
+async function watchAd() {
+  const email = getEmail();
+  if (!email) return;
+
+  const res = await fetch("/watch-ad", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    alert("❌ " + data.error);
+  } else {
+    alert("✅ Ad watched! +1 image added");
+  }
+}
+
+/* =========================
+   UPGRADE PRO
+========================= */
+async function upgradePro() {
+  const email = getEmail();
+  if (!email) return;
+
+  const res = await fetch("/upgrade", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("🎉 You are now PRO! Unlimited images unlocked.");
+  } else {
+    alert(data.error || "Upgrade failed");
+  }
+}
+</script>
+
+</body>
+</html>
