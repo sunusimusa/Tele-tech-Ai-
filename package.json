@@ -1,17 +1,16 @@
 {
   "name": "tele-image-ai",
   "version": "1.0.0",
-  "description": "AI Image Generator",
+  "description": "Web AI Image Generator",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "axios": "^1.7.9",
+    "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "openai": "^4.28.0",
+    "express": "^4.19.2",
+    "openai": "^4.28.0"
   }
 }
