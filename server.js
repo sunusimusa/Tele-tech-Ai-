@@ -204,20 +204,14 @@ app.post("/admin/set-plan", requireAdmin, (req, res) => {
   res.json({ success: true, email, plan });
 });
 /* ===== ADMIN: STATS ===== */
-app.get("/admin/stats", (req, res) => {
-  const adminKey = req.headers["x-admin-key"];
-
-  if (adminKey !== process.env.ADMIN_KEY) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
+app.get("/admin/stats", requireAdmin, (req, res) => {
   const users = getUsers();
 
   const stats = {
     totalUsers: users.length,
-    verifiedUsers: users.filter(u => u.verified).length,
     proUsers: users.filter(u => u.plan === "pro").length,
-    freeUsers: users.filter(u => u.plan === "free").length
+    verifiedUsers: users.filter(u => u.verified).length,
+    totalImages: users.reduce((sum, u) => sum + (u.dailyCount || 0), 0)
   };
 
   res.json(stats);
