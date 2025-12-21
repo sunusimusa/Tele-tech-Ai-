@@ -14,9 +14,8 @@
 <img id="result" style="max-width:100%; margin-top:20px">
 
 <script>
-async function generate() {
+async function generateImage() {
   const prompt = document.getElementById("prompt").value;
-  document.getElementById("status").innerText = "Generating...";
 
   const res = await fetch("/generate", {
     method: "POST",
@@ -26,12 +25,17 @@ async function generate() {
 
   const data = await res.json();
 
-  if (data.image) {
-    document.getElementById("result").src = data.image;
-    document.getElementById("status").innerText = "Done ✅";
-  } else {
-    document.getElementById("status").innerText = data.error || "Error";
+  if (data.error) {
+    alert(data.error);
+    return;
   }
+
+  const img = document.getElementById("resultImage");
+  img.src = data.image;
+
+  const btn = document.getElementById("downloadBtn");
+  btn.disabled = true;
+  btn.innerText = "🔒 Download (Watch Ad)";
 }
 </script>
 
