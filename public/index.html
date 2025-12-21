@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <title>Tele Image AI</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -36,7 +34,7 @@
       padding: 10px 14px;
       font-size: 14px;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 6px;
       border: 1px solid #ccc;
       background: #fff;
     }
@@ -46,7 +44,7 @@
     }
 
     #status {
-      margin-top: 12px;
+      margin-top: 10px;
       font-weight: bold;
     }
 
@@ -54,12 +52,13 @@
       margin-top: 15px;
       max-width: 100%;
       display: none;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid #ddd;
     }
 
     .link {
       margin-top: 15px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -70,10 +69,7 @@
 
   <!-- PROMPT -->
   <div class="row">
-    <input
-      id="prompt"
-      placeholder="Describe image (e.g. a cat wearing sunglasses)"
-    />
+    <input id="prompt" placeholder="Describe image (e.g. a cat wearing glasses)" />
     <button onclick="generateImage()">Generate</button>
   </div>
 
@@ -87,12 +83,11 @@
   <!-- STATUS -->
   <div id="status"></div>
 
-  <!-- RESULT IMAGE -->
+  <!-- RESULT -->
   <img id="resultImage" />
 
   <div class="link">
-    Ba ka da account?
-    <a href="/register.html">Create account</a>
+    Ba ka da account? <a href="/register.html">Create account</a>
   </div>
 
 <script>
@@ -112,17 +107,17 @@ function getEmail() {
    GENERATE IMAGE
 ========================= */
 async function generateImage() {
-  const prompt = document.getElementById("prompt").value;
+  const prompt = document.getElementById("prompt").value.trim();
   const status = document.getElementById("status");
   const img = document.getElementById("resultImage");
 
-  const email = getEmail();
-  if (!email) return;
-
   if (!prompt) {
-    status.innerText = "❌ Please enter image description";
+    alert("Please enter image description");
     return;
   }
+
+  const email = getEmail();
+  if (!email) return;
 
   status.innerText = "🎨 Generating image...";
   img.style.display = "none";
@@ -145,14 +140,15 @@ async function generateImage() {
     img.style.display = "block";
     status.innerText =
       "✅ Image generated. Remaining: " +
-      (data.remaining ?? "unlimited");
+      (data.remaining === undefined ? "unlimited" : data.remaining);
+
   } catch (err) {
-    status.innerText = "❌ Server error, try again later";
+    status.innerText = "❌ Network error";
   }
 }
 
 /* =========================
-   VERIFY ACCOUNT
+   VERIFY
 ========================= */
 async function verifyAccount() {
   const email = getEmail();
@@ -167,7 +163,7 @@ async function verifyAccount() {
   const data = await res.json();
 
   if (data.success) {
-    alert("✅ Account verified successfully!");
+    alert("✅ Account verified!");
   } else {
     alert(data.error || "Verification failed");
   }
@@ -196,7 +192,7 @@ async function watchAd() {
 }
 
 /* =========================
-   UPGRADE TO PRO
+   UPGRADE PRO
 ========================= */
 async function upgradePro() {
   const email = getEmail();
