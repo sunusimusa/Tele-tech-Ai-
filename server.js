@@ -143,30 +143,25 @@ app.post("/watch-ad", (req, res) => {
     message: "Ad watched. 1 free generation added."
   });
 });
-app.post("/upgrade", (req, res) => {
-  const { email } = req.body;
-
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  user.plan = "pro";
-  saveUsers(users);
-
-  res.json({ success: true, plan: "pro" });
-});
-
 app.post("/generate", (req, res) => {
   const { email, prompt } = req.body;
 
   const users = getUsers();
-  const user = users.find(u => u.email === email);
+  let user = users.find(u => u.email === email);
 
+  // 🔁 AUTO-CREATE USER (Telegram users)
   if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
+    user = {
+      email,
+      password: "",
+      verified: true,
+      plan: "pro",
+      dailyCount: 0,
+      lastUsed: new Date().toISOString().slice(0, 10),
+      adsWatched: 0
+    };
+    users.push(user);
+    saveUsers(users);
   }
 
   // ✅ VERIFY CHECK
