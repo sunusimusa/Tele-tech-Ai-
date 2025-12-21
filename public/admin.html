@@ -7,99 +7,115 @@
   <style>
     body {
       font-family: Arial;
-      background: #f4f6f9;
-      max-width: 700px;
-      margin: auto;
       padding: 20px;
+      max-width: 900px;
+      margin: auto;
     }
 
-    h2 { margin-bottom: 10px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
 
-    input, button {
+    th, td {
+      border: 1px solid #ddd;
       padding: 8px;
-      margin: 5px 0;
+      text-align: left;
     }
 
-    .card {
-      background: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 10px;
+    th {
+      background: #f2f2f2;
     }
 
-    .user {
-      border-bottom: 1px solid #ddd;
-      padding: 5px 0;
+    button {
+      padding: 5px 10px;
+      cursor: pointer;
     }
 
-    .pro { color: green; font-weight: bold; }
-    .free { color: gray; }
+    .stats {
+      margin-top: 15px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
 
-<h2>🔐 Admin Dashboard</h2>
+<h2>📊 Admin Dashboard</h2>
 
-<input id="key" placeholder="Admin Key">
-<button onclick="loadStats()">Load Stats</button>
-<button onclick="loadUsers()">Load Users</button>
+<input id="key" placeholder="Admin key" />
+<button onclick="loadData()">Load</button>
 
-<div id="stats"></div>
-<div id="users"></div>
+<div class="stats" id="stats"></div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Plan</th>
+      <th>Verified</th>
+      <th>Daily</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="users"></tbody>
+</table>
 
 <script>
-async function loadStats() {
+async function loadData() {
   const key = document.getElementById("key").value;
 
-  const res = await fetch("/admin/stats", {
+  // STATS
+  const statsRes = await fetch("/admin/stats", {
     headers: { "x-admin-key": key }
   });
 
-  const data = await res.json();
-
-  if (data.error) {
-    alert(data.error);
+  if (!statsRes.ok) {
+    alert("Unauthorized");
     return;
   }
 
-  document.getElementById("stats").innerHTML = `
-    <div class="card">
-      👥 Total Users: ${data.totalUsers}<br>
-      ✅ Verified: ${data.verifiedUsers}<br>
-      💎 PRO: ${data.proUsers}<br>
-      🆓 Free: ${data.freeUsers}
-    </div>
-  `;
-}
+  const stats = await statsRes.json();
+  document.getElementById("stats").innerText =
+    `Users: ${stats.totalUsers}, PRO: ${stats.proUsers}, Verified: ${stats.verifiedUsers}, Images: ${stats.totalImages}`;
 
-async function loadUsers() {
-  const key = document.getElementById("key").value;
-
-  const res = await fetch("/admin/users", {
+  // USERS
+  const usersRes = await fetch("/admin/users", {
     headers: { "x-admin-key": key }
   });
 
-  const users = await res.json();
-
-  if (users.error) {
-    alert(users.error);
-    return;
-  }
-
-  const div = document.getElementById("users");
-  div.innerHTML = "<div class='card'><b>Users</b></div>";
+  const users = await usersRes.json();
+  const tbody = document.getElementById("users");
+  tbody.innerHTML = "";
 
   users.forEach(u => {
-    div.innerHTML += `
-      <div class="user">
-        ${u.email} —
-        <span class="${u.plan}">
-          ${u.plan.toUpperCase()}
-        </span>
-        ${u.verified ? "✅" : "❌"}
-      </div>
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.email}</td>
+      <td>${u.plan}</td>
+      <td>${u.verified}</td>
+      <td>${u.dailyCount || 0}</td>
+      <td>
+        <button onclick="togglePlan('${u.email}')">Toggle Plan</button>
+      </td>
     `;
+    tbody.appendChild(tr);
   });
+}
+
+async function togglePlan(email) {
+  const key = document.getElementById("key").value;
+
+  await fetch("/admin/toggle-plan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-key": key
+    },
+    body: JSON.stringify({ email })
+  });
+
+  loadData();
 }
 </script>
 
