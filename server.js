@@ -224,6 +224,10 @@ app.get("/admin/users", (req, res) => {
     users
   });
 });
+app.get("/admin/users", requireAdmin, (req, res) => {
+  const users = getUsers();
+  res.json(users);
+});
 
 /* ================= START ================= */
 app.listen(PORT, () => {
