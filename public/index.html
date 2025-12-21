@@ -94,6 +94,29 @@ async function verifyAccount() {
       alert("✅ Ad watched! You got +1 image");
     }
   }
+
+async function upgradePro() {
+  const email = localStorage.getItem("email");
+
+  if (!email) {
+    alert("Please login first");
+    return;
+  }
+
+  const res = await fetch("/upgrade", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("🎉 You are now PRO! Unlimited images unlocked.");
+  } else {
+    alert(data.error || "Upgrade failed");
+  }
+}
 </script>
 
 </body>
