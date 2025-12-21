@@ -183,6 +183,26 @@ app.get("/admin/users", (req, res) => {
   const users = getUsers();
   res.json(users);
 });
+/* ===== ADMIN: CHANGE USER PLAN ===== */
+app.post("/admin/set-plan", requireAdmin, (req, res) => {
+  const { email, plan } = req.body;
+
+  if (!email || !plan) {
+    return res.status(400).json({ error: "Email and plan required" });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  user.plan = plan;
+  saveUsers(users);
+
+  res.json({ success: true, email, plan });
+});
 /* ===== ADMIN: STATS ===== */
 app.get("/admin/stats", (req, res) => {
   const adminKey = req.headers["x-admin-key"];
