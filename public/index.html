@@ -1,147 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Tele Image AI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Tele Image AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-:root {
-  --bg: #f4f6f9;
-  --card: #ffffff;
-  --text: #111;
-  --btn: #007bff;
-}
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --text: #000;
+      --btn: #2563eb;
+    }
 
-body.dark {
-  --bg: #0f172a;
-  --card: #1e293b;
-  --text: #e5e7eb;
-  --btn: #38bdf8;
-}
+    body.dark {
+      --bg: #0f172a;
+      --card: #020617;
+      --text: #e5e7eb;
+      --btn: #38bdf8;
+    }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      transition: 0.3s;
+    }
 
-.container {
-  max-width: 520px;
-  margin: 30px auto;
-  padding: 15px;
-}
+    .card {
+      background: var(--card);
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
 
-.card {
-  background: var(--card);
-  padding: 16px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
+    h2, h3 {
+      margin-top: 0;
+    }
 
-h2 {
-  margin-top: 0;
-  text-align: center;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
 
-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
+    button {
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: none;
+      background: var(--btn);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 6px;
+      margin-top: 6px;
+    }
 
-button {
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: var(--btn);
-  color: #fff;
-  font-weight: bold;
-}
+    button.secondary {
+      background: #64748b;
+    }
 
-button.secondary {
-  background: #555;
-}
+    button.danger {
+      background: #dc2626;
+    }
 
-.row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
 
-.row button {
-  flex: 1;
-}
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
 
-#status {
-  margin-top: 10px;
-  font-weight: bold;
-}
+    #resultImage {
+      margin-top: 15px;
+      max-width: 100%;
+      border-radius: 8px;
+      display: none;
+    }
 
-#loader {
-  display: none;
-  text-align: center;
-  margin-top: 10px;
-}
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
 
-#resultImage {
-  display: none;
-  margin-top: 12px;
-  max-width: 100%;
-  border-radius: 8px;
-}
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.toggle {
-  text-align: right;
-  font-size: 14px;
-  cursor: pointer;
-}
-</style>
+    .loader {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .loader span {
+      animation: blink 1.4s infinite both;
+    }
+
+    .loader span:nth-child(2) { animation-delay: .2s; }
+    .loader span:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes blink {
+      0% { opacity: .2 }
+      20% { opacity: 1 }
+      100% { opacity: .2 }
+    }
+  </style>
 </head>
 
 <body>
-<div class="container">
 
-  <div class="toggle" onclick="toggleMode()">🌙 / ☀️</div>
+<div class="topbar">
+  <h2>🎨 Tele Image AI</h2>
+  <button class="secondary" onclick="toggleDark()">🌙</button>
+</div>
 
-  <div class="card">
-    <h2>🎨 Tele Image AI</h2>
+<div class="card">
+  <h3>Generate Image</h3>
+  <input id="prompt" placeholder="Describe image (e.g. a cyberpunk lion)" />
+  <button onclick="generateImage()">Generate</button>
 
-    <input id="prompt" placeholder="Describe image (e.g. a lion wearing glasses)" />
-    <button onclick="generateImage()">Generate Image</button>
-
-    <div id="loader">⏳ Generating image...</div>
-    <div id="status"></div>
-    <img id="resultImage" />
+  <div class="loader" id="loader">
+    Generating<span>.</span><span>.</span><span>.</span>
   </div>
 
-  <div class="card">
-    <div class="row">
-      <button class="secondary" onclick="verifyAccount()">Verify Account</button>
-      <button class="secondary" onclick="watchAd()">Watch Ad (+1)</button>
-    </div>
-    <br>
-    <button onclick="upgradePro()">Upgrade to PRO 🚀</button>
-  </div>
+  <div id="status"></div>
+  <img id="resultImage" />
+</div>
 
-  <div class="card" style="text-align:center">
-    <a href="/register.html">Create account</a> |
-    <a href="/login.html">Login</a>
+<div class="card">
+  <h3>Account Actions</h3>
+  <div class="row">
+    <button onclick="verifyAccount()">Verify Account</button>
+    <button onclick="watchAd()">Watch Ad (+1)</button>
+    <button onclick="upgradePro()">Upgrade PRO 🚀</button>
   </div>
+</div>
 
+<div class="card">
+  <small>
+    Ba ka da account? <a href="/register">Register</a> |
+    <a href="/">Login</a>
+  </small>
 </div>
 
 <script>
-function toggleMode() {
-  document.body.classList.toggle("dark");
-}
-
-/* ================= HELPERS ================= */
 function getEmail() {
   const email = localStorage.getItem("email");
   if (!email) {
@@ -151,20 +166,23 @@ function getEmail() {
   return email;
 }
 
-/* ================= GENERATE ================= */
+function toggleDark() {
+  document.body.classList.toggle("dark");
+}
+
 async function generateImage() {
+  const email = getEmail();
+  if (!email) return;
+
   const prompt = document.getElementById("prompt").value;
   const status = document.getElementById("status");
   const img = document.getElementById("resultImage");
   const loader = document.getElementById("loader");
 
   if (!prompt) {
-    status.innerText = "❌ Enter image description";
+    alert("Enter image prompt");
     return;
   }
-
-  const email = getEmail();
-  if (!email) return;
 
   status.innerText = "";
   img.style.display = "none";
@@ -186,10 +204,9 @@ async function generateImage() {
 
   img.src = data.image;
   img.style.display = "block";
-  status.innerText = "✅ Done. Remaining: " + data.remaining;
+  status.innerText = "✅ Generated | Remaining: " + data.remaining;
 }
 
-/* ================= VERIFY ================= */
 async function verifyAccount() {
   const email = getEmail();
   if (!email) return;
@@ -204,7 +221,6 @@ async function verifyAccount() {
   alert(data.success ? "✅ Account verified" : data.error);
 }
 
-/* ================= WATCH AD ================= */
 async function watchAd() {
   const email = getEmail();
   if (!email) return;
@@ -216,10 +232,9 @@ async function watchAd() {
   });
 
   const data = await res.json();
-  alert(data.error ? "❌ " + data.error : "✅ +1 image added");
+  alert(data.error || "✅ +1 image added");
 }
 
-/* ================= UPGRADE ================= */
 async function upgradePro() {
   const email = getEmail();
   if (!email) return;
@@ -231,9 +246,9 @@ async function upgradePro() {
   });
 
   const data = await res.json();
-  alert(data.success ? "🎉 You are PRO now!" : data.error);
+  alert(data.success ? "🎉 You are now PRO" : data.error);
 }
 </script>
 
 </body>
-</html>
+  </html>
