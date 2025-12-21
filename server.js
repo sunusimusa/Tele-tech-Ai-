@@ -17,23 +17,23 @@ const USERS_FILE = path.join(__dirname, "data", "users.json");
 
 function getUsers() {
   if (!fs.existsSync(USERS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+  try {
+    return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+  } catch {
+    return [];
+  }
 }
 
 function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-// =======================
-// ADMIN MIDDLEWARE
-// =======================
+/* ================= ADMIN MIDDLEWARE ================= */
 function requireAdmin(req, res, next) {
   const key = req.headers["x-admin-key"];
-
   if (key !== process.env.ADMIN_KEY) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
   next();
 }
 
@@ -62,7 +62,7 @@ app.post("/register", async (req, res) => {
 
   const users = getUsers();
   if (users.find(u => u.email === email))
-    return res.json({ success: false, error: "User exists" });
+    return res.json({ success: false, error: "User already exists" });
 
   const hash = await bcrypt.hash(password, 10);
 
@@ -82,13 +82,16 @@ app.post("/register", async (req, res) => {
 /* ================= LOGIN ================= */
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
+
   const users = getUsers();
   const user = users.find(u => u.email === email);
 
-  if (!user) return res.json({ success: false, error: "User not found" });
+  if (!user)
+    return res.json({ success: false, error: "User not found" });
 
   const ok = await bcrypt.compare(password, user.password);
-  if (!ok) return res.json({ success: false, error: "Wrong password" });
+  if (!ok)
+    return res.json({ success: false, error: "Wrong password" });
 
   res.json({
     success: true,
@@ -104,7 +107,8 @@ app.post("/verify", (req, res) => {
   const users = getUsers();
   const user = users.find(u => u.email === email);
 
-  if (!user) return res.status(404).json({ error: "User not found" });
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
 
   user.verified = true;
   saveUsers(users);
@@ -121,7 +125,8 @@ app.post("/generate", async (req, res) => {
 
     const users = getUsers();
     const user = users.find(u => u.email === email);
-    if (!user) return res.status(401).json({ error: "Unauthorized" });
+    if (!user)
+      return res.status(401).json({ error: "Unauthorized" });
 
     if (!user.verified)
       return res.status(403).json({ error: "Please verify account" });
@@ -154,93 +159,56 @@ app.post("/generate", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("IMAGE ERROR:", err);
+    console.error("IMAGE ERROR:", err.message);
     res.status(500).json({ error: "Image generation failed" });
   }
 });
 
-/* ================= PRO UPGRADE (MANUAL) ================= */
+/* ================= PRO UPGRADE ================= */
 app.post("/upgrade", (req, res) => {
   const { email } = req.body;
   const users = getUsers();
   const user = users.find(u => u.email === email);
 
-  if (!user) return res.status(404).json({ error: "User not found" });
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
 
   user.plan = "pro";
   saveUsers(users);
 
   res.json({ success: true, plan: "pro" });
 });
-/* ===== ADMIN: GET ALL USERS ===== */
-app.get("/admin/users", (req, res) => {
-  const adminKey = req.headers["x-admin-key"];
 
-  if (adminKey !== process.env.ADMIN_KEY) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const users = getUsers();
-  res.json(users);
+/* ================= ADMIN ROUTES ================= */
+app.get("/admin/users", requireAdmin, (req, res) => {
+  res.json(getUsers());
 });
-/* ===== ADMIN: CHANGE USER PLAN ===== */
+
+app.get("/admin/stats", requireAdmin, (req, res) => {
+  const users = getUsers();
+  res.json({
+    totalUsers: users.length,
+    proUsers: users.filter(u => u.plan === "pro").length,
+    verifiedUsers: users.filter(u => u.verified).length,
+    totalImages: users.reduce(
+      (sum, u) => sum + (u.dailyCount || 0),
+      0
+    )
+  });
+});
+
 app.post("/admin/set-plan", requireAdmin, (req, res) => {
   const { email, plan } = req.body;
-
-  if (!email || !plan) {
-    return res.status(400).json({ error: "Email and plan required" });
-  }
-
   const users = getUsers();
   const user = users.find(u => u.email === email);
 
-  if (!user) {
+  if (!user)
     return res.status(404).json({ error: "User not found" });
-  }
 
   user.plan = plan;
   saveUsers(users);
 
-  res.json({ success: true, email, plan });
-});
-/* ===== ADMIN: STATS ===== */
-app.get("/admin/stats", requireAdmin, (req, res) => {
-  const users = getUsers();
-
-  const stats = {
-    totalUsers: users.length,
-    proUsers: users.filter(u => u.plan === "pro").length,
-    verifiedUsers: users.filter(u => u.verified).length,
-    totalImages: users.reduce((sum, u) => sum + (u.dailyCount || 0), 0)
-  };
-
-  res.json(stats);
-});
-// ===============================
-// ADMIN: GET ALL USERS + STATS
-// ===============================
-app.get("/admin/users", (req, res) => {
-  const users = getUsers();
-
-  const totalUsers = users.length;
-  const proUsers = users.filter(u => u.plan === "pro").length;
-  const totalImages = users.reduce(
-    (sum, u) => sum + (u.dailyCount || 0),
-    0
-  );
-
-  res.json({
-    stats: {
-      users: totalUsers,
-      pro: proUsers,
-      images: totalImages
-    },
-    users
-  });
-});
-app.get("/admin/users", requireAdmin, (req, res) => {
-  const users = getUsers();
-  res.json(users);
+  res.json({ success: true });
 });
 
 /* ================= START ================= */
