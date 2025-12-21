@@ -4,78 +4,104 @@
 <meta charset="UTF-8">
 <title>Tele Image AI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f2f4f8;
-    padding: 20px;
-  }
+:root {
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --text: #111;
+  --btn: #007bff;
+}
 
-  .container {
-    max-width: 420px;
-    margin: auto;
-  }
+body.dark {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #e5e7eb;
+  --btn: #38bdf8;
+}
 
-  .card {
-    background: #ffffff;
-    padding: 16px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin-bottom: 16px;
-  }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
 
-  h2 {
-    margin-top: 0;
-    text-align: center;
-  }
+.container {
+  max-width: 520px;
+  margin: 30px auto;
+  padding: 15px;
+}
 
-  input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-  }
+.card {
+  background: var(--card);
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
 
-  button {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    background: #2563eb;
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
-  }
+h2 {
+  margin-top: 0;
+  text-align: center;
+}
 
-  button.secondary {
-    background: #6b7280;
-  }
+input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
 
-  button.danger {
-    background: #dc2626;
-  }
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--btn);
+  color: #fff;
+  font-weight: bold;
+}
 
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+button.secondary {
+  background: #555;
+}
 
-  #status {
-    margin-top: 8px;
-    font-weight: bold;
-    text-align: center;
-  }
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-  img {
-    max-width: 100%;
-    border-radius: 8px;
-    margin-top: 12px;
-    display: none;
-  }
+.row button {
+  flex: 1;
+}
+
+#status {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+#loader {
+  display: none;
+  text-align: center;
+  margin-top: 10px;
+}
+
+#resultImage {
+  display: none;
+  margin-top: 12px;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.toggle {
+  text-align: right;
+  font-size: 14px;
+  cursor: pointer;
+}
 </style>
-
 </head>
 
 <body>
