@@ -1,177 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Tele Image AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Tele Image AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    :root {
-      --bg: #f4f6f9;
-      --card: #ffffff;
-      --text: #111;
-      --primary: #4f46e5;
-      --danger: #dc2626;
-    }
+<style>
+:root {
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --text: #111;
+  --primary: #4f46e5;
+  --border: #ddd;
+}
 
-    body.dark {
-      --bg: #0f172a;
-      --card: #020617;
-      --text: #e5e7eb;
-    }
+body.dark {
+  --bg: #0f172a;
+  --card: #020617;
+  --text: #e5e7eb;
+  --primary: #6366f1;
+  --border: #1e293b;
+}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      transition: 0.3s;
-    }
+body {
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 20px;
+}
 
-    .card {
-      background: var(--card);
-      width: 100%;
-      max-width: 600px;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
+.container {
+  max-width: 600px;
+  margin: auto;
+}
 
-    h2 {
-      margin-top: 0;
-      text-align: center;
-    }
+.card {
+  background: var(--card);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 15px;
+}
 
-    .row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
+h2 {
+  margin-top: 0;
+}
 
-    input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-    button {
-      padding: 10px 14px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      background: var(--primary);
-      color: #fff;
-    }
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
 
-    button.secondary {
-      background: #64748b;
-    }
+button {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-    button.danger {
-      background: var(--danger);
-    }
+button.secondary {
+  background: #64748b;
+}
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-    #status {
-      margin-top: 10px;
-      font-weight: bold;
-      text-align: center;
-    }
+#status {
+  margin-top: 10px;
+  font-weight: bold;
+}
 
-    #loader {
-      display: none;
-      text-align: center;
-      margin-top: 10px;
-    }
+#resultImage {
+  max-width: 100%;
+  margin-top: 15px;
+  border-radius: 10px;
+  display: none;
+}
 
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #ddd;
-      border-top: 4px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: auto;
-    }
+.loader {
+  display: none;
+  margin-top: 10px;
+}
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    img {
-      max-width: 100%;
-      border-radius: 10px;
-      margin-top: 15px;
-      display: none;
-    }
-
-    .footer {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .toggle {
-      text-align: right;
-      margin-bottom: 10px;
-    }
-  </style>
+.toggle {
+  float: right;
+  cursor: pointer;
+  font-size: 14px;
+}
+</style>
 </head>
 
 <body>
+<div class="container">
 
   <div class="card">
-    <div class="toggle">
-      <button class="secondary" onclick="toggleMode()">🌙 / ☀️</button>
-    </div>
+    <h2>
+      Tele Image AI
+      <span class="toggle" onclick="toggleDark()">🌓 Dark</span>
+    </h2>
+    <p>Generate AI images (Free 5 / day)</p>
+  </div>
 
-    <h2>🎨 Tele Image AI</h2>
-
-    <!-- PROMPT -->
+  <div class="card">
     <div class="row">
-      <input id="prompt" placeholder="Describe image (e.g. a cat astronaut)" />
+      <input id="prompt" placeholder="Describe image (e.g. a lion wearing glasses)">
       <button onclick="generateImage()">Generate</button>
     </div>
 
-    <!-- ACTIONS -->
-    <div class="row">
-      <button class="secondary" onclick="verifyAccount()">Verify</button>
-      <button class="secondary" onclick="watchAd()">Watch Ad +1</button>
-      <button class="danger" onclick="upgradePro()">Upgrade PRO 🚀</button>
-    </div>
-
-    <!-- STATUS -->
+    <div class="loader" id="loader">⏳ Generating image...</div>
     <div id="status"></div>
 
-    <!-- LOADER -->
-    <div id="loader">
-      <div class="spinner"></div>
-      <p>Generating image...</p>
-    </div>
+    <img id="resultImage">
+  </div>
 
-    <!-- IMAGE -->
-    <img id="resultImage" />
-
-    <div class="footer">
-      Ba ka da account? <a href="/register.html">Create account</a>
+  <div class="card">
+    <div class="row">
+      <button class="secondary" onclick="verifyAccount()">Verify Account</button>
+      <button class="secondary" onclick="watchAd()">Watch Ad (+1)</button>
+      <button onclick="upgradePro()">Upgrade PRO 🚀</button>
     </div>
   </div>
 
+  <div class="card">
+    <p>
+      Ba ka da account?
+      <a href="/register.html">Create account</a>
+    </p>
+  </div>
+
+</div>
+
 <script>
-/* ================= HELPERS ================= */
+/* =========================
+   DARK MODE
+========================= */
+function toggleDark() {
+  document.body.classList.toggle("dark");
+}
+
+/* =========================
+   HELPERS
+========================= */
 function getEmail() {
   const email = localStorage.getItem("email");
   if (!email) {
@@ -181,13 +165,11 @@ function getEmail() {
   return email;
 }
 
-function toggleMode() {
-  document.body.classList.toggle("dark");
-}
-
-/* ================= GENERATE IMAGE ================= */
+/* =========================
+   GENERATE IMAGE
+========================= */
 async function generateImage() {
-  const prompt = document.getElementById("prompt").value.trim();
+  const prompt = document.getElementById("prompt").value;
   const status = document.getElementById("status");
   const img = document.getElementById("resultImage");
   const loader = document.getElementById("loader");
@@ -220,10 +202,12 @@ async function generateImage() {
 
   img.src = data.image;
   img.style.display = "block";
-  status.innerText = "✅ Image generated. Remaining: " + data.remaining;
+  status.innerText = "✅ Remaining: " + data.remaining;
 }
 
-/* ================= VERIFY ================= */
+/* =========================
+   VERIFY
+========================= */
 async function verifyAccount() {
   const email = getEmail();
   if (!email) return;
@@ -238,7 +222,9 @@ async function verifyAccount() {
   alert(data.success ? "✅ Account verified!" : data.error);
 }
 
-/* ================= WATCH AD ================= */
+/* =========================
+   WATCH AD
+========================= */
 async function watchAd() {
   const email = getEmail();
   if (!email) return;
@@ -250,10 +236,12 @@ async function watchAd() {
   });
 
   const data = await res.json();
-  alert(data.error ? "❌ " + data.error : "✅ +1 image added");
+  alert(data.success ? "✅ +1 image added!" : data.error);
 }
 
-/* ================= UPGRADE ================= */
+/* =========================
+   UPGRADE
+========================= */
 async function upgradePro() {
   const email = getEmail();
   if (!email) return;
@@ -265,7 +253,7 @@ async function upgradePro() {
   });
 
   const data = await res.json();
-  alert(data.success ? "🎉 You are now PRO!" : data.error);
+  alert(data.success ? "🎉 PRO activated!" : data.error);
 }
 </script>
 
