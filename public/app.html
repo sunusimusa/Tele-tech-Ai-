@@ -80,6 +80,8 @@
   🔒 Download (Watch Ad)
   </button>
 
+  <button id="downloadBtn" disabled>⬇️ Download</button>
+
   <div class="link">
     Ba ka da account? <a href="/register.html">Create account</a>
   </div>
@@ -194,7 +196,17 @@ async function upgradePro() {
     alert(data.error || "Upgrade failed");
   }
 }
-</script>
+<script>
+document.getElementById("downloadBtn").onclick = () => {
+  alert("📢 Please watch ad to unlock download");
 
+  // Fake ad timer (5 seconds)
+  setTimeout(() => {
+    document.getElementById("downloadBtn").disabled = false;
+    document.getElementById("downloadBtn").innerText = "⬇️ Download";
+  }, 5000);
+};
+</script>
+  
 </body>
 </html>
