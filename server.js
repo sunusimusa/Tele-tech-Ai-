@@ -1,26 +1,11 @@
 const express = require("express");
 const path = require("path");
-const fs = require("fs");
+const bcrypt = require("bcryptjs");
+const db = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-/* ================= STORAGE ================= */
-const DATA_DIR = path.join(__dirname, "data");
-const USERS_FILE = path.join(DATA_DIR, "users.json");
-
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
-if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
-
-function getUsers() {
-  return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
-}
-
-function saveUsers(users) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-
-/* ================= MIDDLEWARE ================= */
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -29,96 +14,102 @@ app.get("/", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "index.html"))
 );
 
-/* ================= IMAGE GENERATE ================= */
+app.get("/register", (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "register.html"))
+);
+
+app.get("/app", (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "app.html"))
+);
+
+/* ================= REGISTER ================= */
+app.post("/register", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.json({ error: "Missing data" });
+
+  const hash = await bcrypt.hash(password, 10);
+
+  db.run(
+    `INSERT INTO users (email, password, lastUsed)
+     VALUES (?, ?, ?)`,
+    [email, hash, new Date().toISOString().slice(0, 10)],
+    err => {
+      if (err) return res.json({ error: "User exists" });
+      res.json({ success: true });
+    }
+  );
+});
+
+/* ================= LOGIN ================= */
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  db.get(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    async (err, user) => {
+      if (!user)
+        return res.json({ error: "User not found" });
+
+      const ok = await bcrypt.compare(password, user.password);
+      if (!ok)
+        return res.json({ error: "Wrong password" });
+
+      res.json({
+        success: true,
+        email: user.email,
+        plan: user.plan,
+        verified: !!user.verified
+      });
+    }
+  );
+});
+
+/* ================= IMAGE GENERATE (POLLINATIONS) ================= */
 app.post("/generate", (req, res) => {
-  const { prompt, email = "guest" } = req.body;
-  if (!prompt) return res.json({ error: "Prompt required" });
+  const { email, prompt } = req.body;
+  if (!email || !prompt)
+    return res.json({ error: "Missing data" });
 
-  const today = new Date().toISOString().slice(0, 10);
-  let users = getUsers();
-  let user = users.find(u => u.email === email);
+  db.get(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    (err, user) => {
+      if (!user)
+        return res.json({ error: "Unauthorized" });
 
-  if (!user) {
-    user = {
-      email,
-      plan: "free",
-      dailyCount: 0,
-      lastUsed: today
-    };
-    users.push(user);
-  }
+      const today = new Date().toISOString().slice(0, 10);
 
-  if (user.lastUsed !== today) {
-    user.dailyCount = 0;
-    user.lastUsed = today;
-  }
+      let daily = user.dailyCount;
+      if (user.lastUsed !== today) daily = 0;
 
-  if (user.plan === "free" && user.dailyCount >= 3) {
-    return res.json({
-      error: "Free limit reached. Watch ad or upgrade to PRO."
-    });
-  }
+      if (user.plan === "free" && daily >= 3) {
+        return res.json({
+          error: "Free limit reached. Pay to download."
+        });
+      }
 
-  const imageUrl =
-    "https://image.pollinations.ai/prompt/" +
-    encodeURIComponent(prompt);
+      const imageUrl =
+        "https://image.pollinations.ai/prompt/" +
+        encodeURIComponent(prompt);
 
-  user.dailyCount += 1;
-  saveUsers(users);
+      db.run(
+        `UPDATE users
+         SET dailyCount = ?, lastUsed = ?
+         WHERE email = ?`,
+        [daily + 1, today, email]
+      );
 
-  res.json({
-    image: imageUrl,
-    remaining:
-      user.plan === "free" ? 3 - user.dailyCount : "unlimited"
-  });
+      res.json({
+        image: imageUrl,
+        remaining:
+          user.plan === "free" ? 3 - (daily + 1) : "unlimited"
+      });
+    }
+  );
 });
 
-/* ================= WATCH AD ================= */
-app.post("/watch-ad", (req, res) => {
-  const { email = "guest" } = req.body;
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-
-  if (!user) return res.json({ error: "User not found" });
-
-  user.dailyCount = Math.max(user.dailyCount - 1, 0);
-  saveUsers(users);
-
-  res.json({ success: true, message: "+1 image added" });
-});
-
-/* ================= PAY BEFORE DOWNLOAD ================= */
-app.post("/unlock-pro", (req, res) => {
-  const { email = "guest" } = req.body;
-  const users = getUsers();
-  let user = users.find(u => u.email === email);
-
-  if (!user) {
-    user = {
-      email,
-      plan: "pro",
-      dailyCount: 0,
-      lastUsed: new Date().toISOString().slice(0, 10)
-    };
-    users.push(user);
-  } else {
-    user.plan = "pro";
-  }
-
-  saveUsers(users);
-  res.json({ success: true, plan: "pro" });
-});
-
-/* ================= ADMIN STATS ================= */
-app.get("/admin/stats", (req, res) => {
-  const users = getUsers();
-  res.json({
-    users: users.length,
-    pro: users.filter(u => u.plan === "pro").length
-  });
-});
-
-/* ================= START ================= */
-app.listen(PORT, () => {
-  console.log("✅ Server running on port " + PORT);
-});
+app.listen(PORT, () =>
+  console.log("✅ Server running on port " + PORT)
+);
