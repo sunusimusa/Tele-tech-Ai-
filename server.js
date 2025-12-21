@@ -92,6 +92,24 @@ app.post("/watch-ad", (req, res) => {
     message: "Ad watched. +1 image added"
   });
 });
+// ===== SIMPLE MEMORY LIMIT (FREE USERS) =====
+const freeUsage = {}; 
+// example: { ip: { count: 3, date: "2025-09-21" } }
+
+function canGenerate(ip) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (!freeUsage[ip] || freeUsage[ip].date !== today) {
+    freeUsage[ip] = { count: 0, date: today };
+  }
+
+  return freeUsage[ip].count < 3; // free = 3 images / day
+}
+
+function increaseUsage(ip) {
+  freeUsage[ip].count += 1;
+}
+
 /* ================== START ================== */
 app.listen(PORT, () => {
   console.log("✅ Server running on port " + PORT);
