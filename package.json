@@ -1,7 +1,7 @@
 {
   "name": "tele-image-ai",
   "version": "1.0.0",
-  "description": "AI Image Generator with Login & Daily Limit",
+  "description": "AI Image Generator",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -12,7 +12,8 @@
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
-    "openai": "^4.28.0"
-    "node-telegram-bot-api": "^0.61.0"
+    "openai": "^4.28.0",
+    "node-telegram-bot-api": "^0.61.0",
+    "node-fetch": "^3.3.2"
   }
 }
