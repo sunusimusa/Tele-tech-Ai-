@@ -1,9 +1,7 @@
 const express = require("express");
 const path = require("path");
-const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const OpenAI = require("openai");
-
 const db = require("./db");
 
 const app = express();
@@ -13,22 +11,6 @@ const PORT = process.env.PORT || 10000;
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-
-/* ================= STORAGE ================= */
-const USERS_FILE = path.join(__dirname, "data", "users.json");
-
-function getUsers() {
-  if (!fs.existsSync(USERS_FILE)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(users) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
 
 /* ================= ADMIN MIDDLEWARE ================= */
 function requireAdmin(req, res, next) {
@@ -56,19 +38,23 @@ app.get("/app", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "app.html"))
 );
 
+app.get("/admin", (req, res) =>
+  res.sendFile(path.join(__dirname, "public", "admin.html"))
+);
+
 /* ================= REGISTER ================= */
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
+  if (!email || !password)
     return res.json({ success: false, error: "Missing data" });
-  }
 
   const hash = await bcrypt.hash(password, 10);
+  const today = new Date().toISOString().slice(0, 10);
 
   db.run(
-    `INSERT INTO users (email, password, plan, verified, dailyCount, lastUsed)
-     VALUES (?, ?, 'free', 0, 0, ?)`,
-    [email, hash, new Date().toISOString().slice(0, 10)],
+    `INSERT INTO users (email, password, lastUsed)
+     VALUES (?, ?, ?)`,
+    [email, hash, today],
     err => {
       if (err) {
         return res.json({ success: false, error: "User exists" });
@@ -83,17 +69,15 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   db.get(
-    "SELECT * FROM users WHERE email = ?",
+    `SELECT * FROM users WHERE email = ?`,
     [email],
     async (err, user) => {
-      if (!user) {
+      if (!user)
         return res.json({ success: false, error: "User not found" });
-      }
 
       const ok = await bcrypt.compare(password, user.password);
-      if (!ok) {
+      if (!ok)
         return res.json({ success: false, error: "Wrong password" });
-      }
 
       res.json({
         success: true,
@@ -108,111 +92,98 @@ app.post("/login", (req, res) => {
 /* ================= VERIFY ================= */
 app.post("/verify", (req, res) => {
   const { email } = req.body;
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
 
-  if (!user)
-    return res.status(404).json({ error: "User not found" });
-
-  user.verified = true;
-  saveUsers(users);
-
-  res.json({ success: true });
+  db.run(
+    `UPDATE users SET verified = 1 WHERE email = ?`,
+    [email],
+    function () {
+      res.json({ success: true });
+    }
+  );
 });
 
-/* ================= IMAGE GENERATE ================= */
+/* ================= GENERATE IMAGE ================= */
 app.post("/generate", async (req, res) => {
-  try {
-    const { email, prompt } = req.body;
-    if (!email || !prompt)
-      return res.status(400).json({ error: "Missing data" });
+  const { email, prompt } = req.body;
+  if (!email || !prompt)
+    return res.status(400).json({ error: "Missing data" });
 
-    const users = getUsers();
-    const user = users.find(u => u.email === email);
-    if (!user)
-      return res.status(401).json({ error: "Unauthorized" });
+  db.get(
+    `SELECT * FROM users WHERE email = ?`,
+    [email],
+    async (err, user) => {
+      if (!user)
+        return res.status(401).json({ error: "User not found" });
 
-    if (!user.verified)
-      return res.status(403).json({ error: "Please verify account" });
+      if (!user.verified)
+        return res.status(403).json({ error: "Verify account first" });
 
-    const today = new Date().toISOString().slice(0, 10);
-    if (user.lastUsed !== today) {
-      user.dailyCount = 0;
-      user.lastUsed = today;
+      const today = new Date().toISOString().slice(0, 10);
+      let dailyCount = user.dailyCount;
+
+      if (user.lastUsed !== today) {
+        dailyCount = 0;
+      }
+
+      if (user.plan === "free" && dailyCount >= 5) {
+        return res.status(403).json({
+          error: "Daily limit reached. Upgrade to PRO"
+        });
+      }
+
+      try {
+        const img = await openai.images.generate({
+          model: "gpt-image-1",
+          prompt,
+          size: "1024x1024"
+        });
+
+        db.run(
+          `UPDATE users
+           SET dailyCount = ?, lastUsed = ?
+           WHERE email = ?`,
+          [dailyCount + 1, today, email]
+        );
+
+        res.json({
+          image: img.data[0].url,
+          remaining:
+            user.plan === "free" ? 5 - (dailyCount + 1) : "unlimited"
+        });
+      } catch (e) {
+        res.status(500).json({ error: "Image generation failed" });
+      }
     }
-
-    if (user.plan === "free" && user.dailyCount >= 5) {
-      return res.status(403).json({
-        error: "Daily free limit reached. Upgrade to Pro."
-      });
-    }
-
-    const img = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt,
-      size: "1024x1024"
-    });
-
-    user.dailyCount += 1;
-    saveUsers(users);
-
-    res.json({
-      image: img.data[0].url,
-      remaining:
-        user.plan === "free" ? 5 - user.dailyCount : "unlimited"
-    });
-
-  } catch (err) {
-    console.error("IMAGE ERROR:", err.message);
-    res.status(500).json({ error: "Image generation failed" });
-  }
+  );
 });
 
-/* ================= PRO UPGRADE ================= */
+/* ================= UPGRADE ================= */
 app.post("/upgrade", (req, res) => {
   const { email } = req.body;
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
 
-  if (!user)
-    return res.status(404).json({ error: "User not found" });
-
-  user.plan = "pro";
-  saveUsers(users);
-
-  res.json({ success: true, plan: "pro" });
+  db.run(
+    `UPDATE users SET plan = 'pro' WHERE email = ?`,
+    [email],
+    () => res.json({ success: true })
+  );
 });
 
-/* ================= ADMIN ROUTES ================= */
+/* ================= ADMIN USERS ================= */
 app.get("/admin/users", requireAdmin, (req, res) => {
-  res.json(getUsers());
+  db.all(`SELECT email, plan, verified, dailyCount FROM users`, [], (err, rows) =>
+    res.json(rows)
+  );
 });
 
+/* ================= ADMIN STATS ================= */
 app.get("/admin/stats", requireAdmin, (req, res) => {
-  const users = getUsers();
-  res.json({
-    totalUsers: users.length,
-    proUsers: users.filter(u => u.plan === "pro").length,
-    verifiedUsers: users.filter(u => u.verified).length,
-    totalImages: users.reduce(
-      (sum, u) => sum + (u.dailyCount || 0),
-      0
-    )
+  db.all(`SELECT * FROM users`, [], (err, users) => {
+    res.json({
+      users: users.length,
+      pro: users.filter(u => u.plan === "pro").length,
+      verified: users.filter(u => u.verified).length
+    });
   });
-});
-
-app.post("/admin/set-plan", requireAdmin, (req, res) => {
-  const { email, plan } = req.body;
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-
-  if (!user)
-    return res.status(404).json({ error: "User not found" });
-
-  user.plan = plan;
-  saveUsers(users);
-
-  res.json({ success: true });
 });
 
 /* ================= START ================= */
