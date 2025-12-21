@@ -185,7 +185,19 @@ app.get("/admin/stats", requireAdmin, (req, res) => {
     });
   });
 });
+app.post("/watch-ad", (req, res) => {
+  const { email } = req.body;
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
 
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  // ƙara hoto 1
+  user.dailyCount = Math.max(0, user.dailyCount - 1);
+  saveUsers(users);
+
+  res.json({ success: true, message: "+1 image added" });
+});
 /* ================= START ================= */
 app.listen(PORT, () => {
   console.log("✅ Server running on port " + PORT);
