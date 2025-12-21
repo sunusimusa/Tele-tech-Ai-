@@ -1,31 +1,28 @@
-const TelegramBot = 
-require("node-telegram-bot-api");
+const TelegramBot = require("node-telegram-bot-api");
 const fetch = require("node-fetch");
 
-// 🔐 Telegram Bot Token
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-
-// 🌍 URL na Tele-tech-AI
 const API_URL = "https://tele-tech-ai.onrender.com/generate";
 
-// Start bot
-const bot = new TelegramBot(TOKEN, { polling: false });
+// ✅ KA BAR WANNAN KADAI
+const bot = new TelegramBot(TOKEN, { polling: true });
 
+// /start
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "👋 Welcome to Tele Image AI!\n\n✍️ Send me any text and I will generate an image for you."
+    "👋 Welcome to Tele Image AI!\n\n🎨 Send a text to generate image"
   );
 });
 
-// Receive text prompt
+// receive prompt
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const prompt = msg.text;
 
-  if (prompt.startsWith("/")) return;
+  if (!prompt || prompt.startsWith("/")) return;
 
-  bot.sendMessage(chatId, "🎨 Generating image, please wait...");
+  await bot.sendMessage(chatId, "🎨 Generating image, please wait...");
 
   try {
     const res = await fetch(API_URL, {
@@ -40,7 +37,7 @@ bot.on("message", async (msg) => {
     const data = await res.json();
 
     if (data.error) {
-      bot.sendMessage(chatId, "❌ " + data.error);
+      await bot.sendMessage(chatId, "❌ " + data.error);
       return;
     }
 
@@ -49,7 +46,7 @@ bot.on("message", async (msg) => {
     });
 
   } catch (err) {
-    bot.sendMessage(chatId, "⚠️ Server error, try again later.");
+    await bot.sendMessage(chatId, "⚠️ Server error, try again later");
   }
 });
 
