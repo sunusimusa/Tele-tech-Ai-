@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tele Image AI</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -25,7 +26,7 @@
     input {
       flex: 1;
       padding: 8px;
-      font-size: 16px;
+      font-size: 14px;
     }
 
     button {
@@ -39,59 +40,73 @@
       font-weight: bold;
     }
 
-    img {
+    #resultImage {
       margin-top: 15px;
       max-width: 100%;
       display: none;
-      border-radius: 8px;
+      border-radius: 6px;
     }
 
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 10px;
+    .link {
+      margin-top: 15px;
     }
   </style>
 </head>
 
 <body>
 
-<h2>Login</h2>
+  <h2>Login</h2>
 
-<div class="row">
-  <input id="prompt" placeholder="Describe image (e.g. a dog wearing glasses)" />
-  <button onclick="generateImage()">Generate</button>
-</div>
+  <!-- PROMPT -->
+  <div class="row">
+    <input id="prompt" placeholder="Describe image (e.g. a dog wearing glasses)" />
+    <button onclick="generateImage()">Generate</button>
+  </div>
 
-<div class="actions">
-  <button onclick="verifyAccount()">Verify Account</button>
-  <button onclick="watchAd()">Watch Ad (+1 Image)</button>
-  <button onclick="upgradePro()">Upgrade to PRO 🚀</button>
-</div>
+  <!-- ACTION BUTTONS -->
+  <div class="row">
+    <button onclick="verifyAccount()">Verify Account</button>
+    <button onclick="watchAd()">Watch Ad (+1 Image)</button>
+    <button onclick="upgradePro()">Upgrade to PRO 🚀</button>
+  </div>
 
-<p id="status"></p>
+  <!-- STATUS -->
+  <div id="status"></div>
 
-<img id="resultImage" />
+  <!-- RESULT IMAGE -->
+  <img id="resultImage" />
 
-<p>
-  Ba ka da account?
-  <a href="/register.html">Create account</a>
-</p>
+  <div class="link">
+    Ba ka da account? <a href="/register.html">Create account</a>
+  </div>
 
 <script>
-/* ===================== GENERATE ===================== */
-async function generateImage() {
-  const prompt = document.getElementById("prompt").value;
+/* =========================
+   HELPERS
+========================= */
+function getEmail() {
   const email = localStorage.getItem("email");
-
   if (!email) {
     alert("Please login first");
-    return;
+    return null;
   }
+  return email;
+}
 
-  document.getElementById("status").innerText = "🎨 Generating image...";
-  
+/* =========================
+   GENERATE IMAGE
+========================= */
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  const status = document.getElementById("status");
+  const img = document.getElementById("resultImage");
+
+  const email = getEmail();
+  if (!email) return;
+
+  status.innerText = "🎨 Generating image...";
+  img.style.display = "none";
+
   const res = await fetch("/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -101,22 +116,21 @@ async function generateImage() {
   const data = await res.json();
 
   if (data.error) {
-    document.getElementById("status").innerText = "❌ " + data.error;
+    status.innerText = "❌ " + data.error;
     return;
   }
 
-  const img = document.getElementById("resultImage");
   img.src = data.image;
   img.style.display = "block";
-
-  document.getElementById("status").innerText =
-    "✅ Generated! Remaining: " + (data.remaining ?? "∞");
+  status.innerText = "✅ Image generated. Remaining: " + data.remaining;
 }
 
-/* ===================== VERIFY ===================== */
+/* =========================
+   VERIFY
+========================= */
 async function verifyAccount() {
-  const email = localStorage.getItem("email");
-  if (!email) return alert("Please login first");
+  const email = getEmail();
+  if (!email) return;
 
   const res = await fetch("/verify", {
     method: "POST",
@@ -125,15 +139,20 @@ async function verifyAccount() {
   });
 
   const data = await res.json();
-  alert(data.success ? "✅ Account verified" : data.error);
+
+  if (data.success) {
+    alert("✅ Account verified!");
+  } else {
+    alert(data.error || "Verification failed");
+  }
 }
 
-/* ===================== WATCH AD ===================== */
+/* =========================
+   WATCH AD
+========================= */
 async function watchAd() {
-  const email = localStorage.getItem("email");
-  if (!email) return alert("Please login first");
-
-  document.getElementById("status").innerText = "📺 Watching ad...";
+  const email = getEmail();
+  if (!email) return;
 
   const res = await fetch("/watch-ad", {
     method: "POST",
@@ -144,17 +163,18 @@ async function watchAd() {
   const data = await res.json();
 
   if (data.error) {
-    document.getElementById("status").innerText = "❌ " + data.error;
+    alert("❌ " + data.error);
   } else {
-    document.getElementById("status").innerText =
-      "✅ Ad watched! You got +1 image";
+    alert("✅ Ad watched! +1 image added");
   }
 }
 
-/* ===================== UPGRADE ===================== */
+/* =========================
+   UPGRADE PRO
+========================= */
 async function upgradePro() {
-  const email = localStorage.getItem("email");
-  if (!email) return alert("Please login first");
+  const email = getEmail();
+  if (!email) return;
 
   const res = await fetch("/upgrade", {
     method: "POST",
@@ -163,7 +183,12 @@ async function upgradePro() {
   });
 
   const data = await res.json();
-  alert(data.success ? "🎉 You are now PRO!" : data.error);
+
+  if (data.success) {
+    alert("🎉 You are now PRO! Unlimited images unlocked.");
+  } else {
+    alert(data.error || "Upgrade failed");
+  }
 }
 </script>
 
