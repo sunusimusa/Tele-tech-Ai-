@@ -36,26 +36,24 @@
   <h2>🍔 Tele Image AI (FREE)</h2>
 
   <!-- PROMPT -->
-  <input id="prompt" placeholder="Describe image..." />
+ <input id="prompt" placeholder="Describe image..." />
 
-  <!-- GENERATE -->
-  <button onclick="generateImage()">Generate</button>
+<button onclick="generateImage()">Generate</button>
 
-  <!-- STATUS -->
-  <p id="status"></p>
+<p id="status"></p>
 
-  <!-- IMAGE -->
-  <img id="result" />
+<img id="result" style="max-width:300px; display:block;" />
 
-  <!-- WATCH AD -->
-  <button id="watchAdBtn" style="display:none;" onclick="watchAd()">
-    🔒 Watch ad to unlock
-  </button>
+<button id="watchAdBtn" style="display:none;" onclick="watchAd()">
+  🔒 Watch ad to unlock
+</button>
 
-  <!-- DOWNLOAD -->
-  <a id="downloadBtn" href="#" download>
-    ⬇️ Download
-  </a>
+<a id="downloadBtn"
+   href="#"
+   download="tele-image-ai.png"
+   style="pointer-events:none; opacity:0.5; display:inline-block; margin-top:10px;">
+  ⬇️ Download
+</a>
 
   <!-- ================= SCRIPT ================= -->
 <script>
@@ -64,10 +62,8 @@ let unlocked = false;
 
 async function generateImage() {
   const prompt = document.getElementById("prompt").value;
-  if (!prompt) return alert("Enter prompt");
-
   document.getElementById("status").innerText = "⏳ Generating...";
-
+  
   const res = await fetch("/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -76,48 +72,44 @@ async function generateImage() {
 
   const data = await res.json();
 
-  // idan limit ya kare
-  if (data.limit) {
-    document.getElementById("status").innerText =
-      "❌ Free limit reached. Watch ad to unlock.";
-    document.getElementById("watchAdBtn").style.display = "block";
+  if (data.error) {
+    document.getElementById("status").innerText = "❌ " + data.error;
     return;
   }
 
-  // ✅ IMAGE READY
+  // nuna image
   lastImageUrl = data.image;
+  document.getElementById("result").src = lastImageUrl;
 
-  const img = document.getElementById("result");
-  img.src = lastImageUrl;
-
-  document.getElementById("status").innerText = "✅ Image ready";
-
-  // Kulle download har sai an kalli ad
-  const dBtn = document.getElementById("downloadBtn");
-  dBtn.style.pointerEvents = "none";
-  dBtn.style.opacity = "0.5";
+  // kulle download
   unlocked = false;
+  document.getElementById("downloadBtn").style.pointerEvents = "none";
+  document.getElementById("downloadBtn").style.opacity = "0.5";
+
+  document.getElementById("watchAdBtn").style.display = "inline-block";
+  document.getElementById("status").innerText =
+    "🔒 Watch ad to unlock download";
 }
 
-// 👉 WATCH AD (FAKE AD 5s)
-document.getElementById("watchAdBtn").onclick = () => {
+function watchAd() {
   document.getElementById("status").innerText =
     "📺 Watching ad... please wait";
 
+  // fake ad (5 seconds)
   setTimeout(() => {
     unlocked = true;
 
-    const dBtn = document.getElementById("downloadBtn");
-    dBtn.href = lastImageUrl;   // 🔥 NAN NE MUHIMMI
-    dBtn.style.pointerEvents = "auto";
-    dBtn.style.opacity = "1";
+    const downloadBtn = document.getElementById("downloadBtn");
+    downloadBtn.href = lastImageUrl;   // 👈 NAN NE MUHIMMIN GYARA
+    downloadBtn.style.pointerEvents = "auto";
+    downloadBtn.style.opacity = "1";
 
+    document.getElementById("watchAdBtn").style.display = "none";
     document.getElementById("status").innerText =
       "✅ Download unlocked!";
   }, 5000);
-}; 
-  
+}
 </script>
-  
+   
 </body>
 </html>
