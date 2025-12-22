@@ -28,7 +28,9 @@
 </head>
 
 <body>
-
+  
+<script src="https://js.paystack.co/v1/inline.js"></script>
+  
   <h2>🍔 Tele Image AI (FREE)</h2>
 
   <input id="prompt" placeholder="Describe image..." />
@@ -42,15 +44,16 @@
 
   <br>
 
-  <button id="watchAdBtn" style="display:none;">
-    🔒 Watch ad to unlock
-  </button>
+  <button id="payBtn" onclick="pay()" style="display:none;">
+  💳 Pay ₦200 to Download
+</button>
 
-  <br>
-
-  <button id="downloadBtn">
-    ⬇️ Download Image
-  </button>
+<a id="downloadBtn"
+   href="#"
+   download
+   style="display:none;">
+  ⬇️ Download Image
+</a>
 
   <!-- ================= SCRIPT ================= -->
   <script>
