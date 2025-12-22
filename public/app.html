@@ -1,212 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Tele Image AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f6f7f9;
       padding: 20px;
-      max-width: 600px;
-      margin: auto;
+      text-align: center;
     }
 
-    h2 {
+    h1 {
       margin-bottom: 10px;
-    }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
     }
 
     input {
-      flex: 1;
-      padding: 8px;
-      font-size: 14px;
+      width: 90%;
+      max-width: 400px;
+      padding: 10px;
+      margin-bottom: 10px;
     }
 
     button {
-      padding: 8px 12px;
-      font-size: 14px;
+      padding: 10px 15px;
       cursor: pointer;
+      margin: 5px;
     }
 
-    #status {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    #resultImage {
-      margin-top: 15px;
+    img {
       max-width: 100%;
-      display: none;
+      margin-top: 15px;
       border-radius: 6px;
     }
 
-    .link {
-      margin-top: 15px;
+    .hidden {
+      display: none;
+    }
+
+    .msg {
+      margin-top: 10px;
+      font-weight: bold;
     }
   </style>
 </head>
-
 <body>
 
-  <h2>Login</h2>
+  <h1>🎨 Tele Image AI</h1>
 
-  <!-- PROMPT -->
-  <div class="row">
-    <input id="prompt" placeholder="Describe image (e.g. a dog wearing glasses)" />
-    <button onclick="generateImage()">Generate</button>
+  <input id="prompt" placeholder="Describe image e.g cat wearing crown" />
+  <br />
+  <button onclick="generate()">Generate</button>
+
+  <div class="msg" id="status"></div>
+
+  <div id="result" class="hidden">
+    <img id="img" />
+    <br />
+
+    <button id="downloadBtn" disabled>
+      🔒 Watch Ad to Download
+    </button>
   </div>
 
-  <!-- ACTION BUTTONS -->
-  <div class="row">
-    <button onclick="verifyAccount()">Verify Account</button>
-    <button onclick="watchAd()">Watch Ad (+1 Image)</button>
-    <button onclick="upgradePro()">Upgrade to PRO 🚀</button>
-  </div>
+  <script>
+    let imageUrl = "";
+    let used = 0;
+    const LIMIT = 3; // free limit
 
-  <!-- STATUS -->
-  <div id="status"></div>
+    function generate() {
+      const prompt = document.getElementById("prompt").value.trim();
+      if (!prompt) return alert("Enter prompt");
 
-  <!-- RESULT IMAGE -->
-  <img id="resultImage" />
-  
-  <button id="downloadBtn" disabled>
-  🔒 Download (Watch Ad)
-  </button>
+      if (used >= LIMIT) {
+        document.getElementById("status").innerText =
+          "❌ Free limit reached. Please watch ad or upgrade.";
+        return;
+      }
 
-  <button id="downloadBtn" disabled>⬇️ Download</button>
+      used++;
 
-  <div class="link">
-    Ba ka da account? <a href="/register.html">Create account</a>
-  </div>
+      imageUrl =
+        "https://image.pollinations.ai/prompt/" +
+        encodeURIComponent(prompt);
 
-<script>
-/* =========================
-   HELPERS
-========================= */
-function getEmail() {
-  const email = localStorage.getItem("email");
-  if (!email) {
-    alert("Please login first");
-    return null;
-  }
-  return email;
-}
+      document.getElementById("img").src = imageUrl;
+      document.getElementById("result").classList.remove("hidden");
 
-/* =========================
-   GENERATE IMAGE
-========================= */
-async function generateImage() {
-  const prompt = document.getElementById("prompt").value;
-  const status = document.getElementById("status");
-  const img = document.getElementById("resultImage");
+      document.getElementById("downloadBtn").disabled = true;
+      document.getElementById("downloadBtn").innerText =
+        "🔒 Watch Ad to Download";
 
-  const email = getEmail();
-  if (!email) return;
+      document.getElementById("status").innerText =
+        "✅ Image ready (" + (LIMIT - used) + " free left)";
+    }
 
-  status.innerText = "🎨 Generating image...";
-  img.style.display = "none";
+    // ===== FAKE AD + UNLOCK DOWNLOAD =====
+    document.getElementById("downloadBtn").onclick = () => {
+      alert("📢 Please watch ad to unlock download");
 
-  const res = await fetch("/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, prompt })
-  });
+      setTimeout(() => {
+        const btn = document.getElementById("downloadBtn");
+        btn.disabled = false;
+        btn.innerText = "⬇️ Download";
+        btn.onclick = downloadImage;
+      }, 5000); // 5 sec fake ad
+    };
 
-  const data = await res.json();
+    function downloadImage() {
+      const a = document.createElement("a");
+      a.href = imageUrl;
+      a.download = "tele-image-ai.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  </script>
 
-  if (data.error) {
-    status.innerText = "❌ " + data.error;
-    return;
-  }
-
-  img.src = data.image;
-  img.style.display = "block";
-  status.innerText = "✅ Image generated. Remaining: " + data.remaining;
-}
-
-/* =========================
-   VERIFY
-========================= */
-async function verifyAccount() {
-  const email = getEmail();
-  if (!email) return;
-
-  const res = await fetch("/verify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    alert("✅ Account verified!");
-  } else {
-    alert(data.error || "Verification failed");
-  }
-}
-
-/* =========================
-   WATCH AD
-========================= */
-async function watchAd() {
-  const email = getEmail();
-  if (!email) return;
-
-  const res = await fetch("/watch-ad", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    alert("❌ " + data.error);
-  } else {
-    alert("✅ Ad watched! +1 image added");
-  }
-}
-
-/* =========================
-   UPGRADE PRO
-========================= */
-async function upgradePro() {
-  const email = getEmail();
-  if (!email) return;
-
-  const res = await fetch("/upgrade", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    alert("🎉 You are now PRO! Unlimited images unlocked.");
-  } else {
-    alert(data.error || "Upgrade failed");
-  }
-}
-<script>
-document.getElementById("downloadBtn").onclick = () => {
-  alert("📢 Please watch ad to unlock download");
-
-  // Fake ad timer (5 seconds)
-  setTimeout(() => {
-    document.getElementById("downloadBtn").disabled = false;
-    document.getElementById("downloadBtn").innerText = "⬇️ Download";
-  }, 5000);
-};
-</script>
-  
 </body>
 </html>
