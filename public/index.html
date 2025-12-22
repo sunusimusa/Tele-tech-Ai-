@@ -1,29 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Tele Image AI</title>
 
-  <!-- PAYSTACK -->
+  <!-- Paystack -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
+
+  <!-- Adsterra (SAFE – Non-adult) -->
+  <script src="https://pl28312948.effectivegatecpm.com/4e/8f/53/4e8f53fd8f471d4cfcc6003e48ffb3d3.js"></script>
 
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
       text-align: center;
-      background: #f7f7f7;
+      background: #f9f9f9;
     }
 
     input {
       padding: 10px;
       width: 80%;
-      max-width: 400px;
+      max-width: 300px;
     }
 
     button {
-      margin-top: 10px;
       padding: 10px 15px;
+      margin-top: 10px;
       cursor: pointer;
     }
 
@@ -37,24 +40,15 @@
     #downloadBtn {
       display: none;
     }
-
-    #payBtn {
-      display: none;
-      background: green;
-      color: white;
-      border: none;
-    }
   </style>
 </head>
 
 <body>
 
   <h2>🍔 Tele Image AI</h2>
-  
-  <script src="https://pl28312948.effectivegatecpm.com/4e/8f/53/4e8f53fd8f471d4cfcc6003e48ffb3d3.js"></script>
+
   <input id="prompt" placeholder="Describe image..." />
   <br>
-  <script src="https://pl28312948.effectivegatecpm.com/4e/8f/53/4e8f53fd8f471d4cfcc6003e48ffb3d3.js"></script>
 
   <button onclick="generateImage()">Generate</button>
 
@@ -64,7 +58,7 @@
 
   <br>
 
-  <button id="payBtn" onclick="pay()">
+  <button id="payBtn" onclick="pay()" style="display:none;">
     💳 Pay ₦200 to Download
   </button>
 
@@ -74,21 +68,18 @@
     ⬇️ Download Image
   </button>
 
-  <!-- ================= SCRIPT ================= -->
   <script>
     let lastImageUrl = "";
     let paid = false;
 
-    // 🔹 GENERATE IMAGE
     async function generateImage() {
       const prompt = document.getElementById("prompt").value;
-
       if (!prompt) {
-        alert("Enter prompt");
+        alert("Please enter a prompt");
         return;
       }
 
-      document.getElementById("status").innerText = "⏳ Generating...";
+      document.getElementById("status").innerText = "⏳ Generating image...";
       document.getElementById("result").style.display = "none";
       document.getElementById("downloadBtn").style.display = "none";
       document.getElementById("payBtn").style.display = "none";
@@ -102,12 +93,6 @@
 
       const data = await res.json();
 
-      if (!data.image) {
-        document.getElementById("status").innerText =
-          "❌ Image failed. Try again.";
-        return;
-      }
-
       lastImageUrl = data.image;
 
       const img = document.getElementById("result");
@@ -115,33 +100,31 @@
       img.style.display = "block";
 
       document.getElementById("status").innerText =
-        "🔒 Pay ₦200 to download";
+        "✅ Image ready. Pay to download.";
+
       document.getElementById("payBtn").style.display = "inline-block";
     }
 
-    // 💳 PAYSTACK PAYMENT
-function pay() {
-  let handler = PaystackPop.setup({
-    key: 'pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba', // 🔴 SAKA PUBLIC KEY DINKA ANAN
-    email: 'customer@email.com',
-    amount: 200 * 100, // ₦200
-    currency: 'NGN',
-    callback: function(response) {
-      alert('✅ Payment successful!');
-      unlocked = true;
-
-      document.getElementById("downloadBtn").style.display = "inline-block";
-      document.getElementById("payBtn").style.display = "none";
-      document.getElementById("status").innerText = "🔓 Download unlocked";
-    },
-    onClose: function() {
-      alert('❌ Payment cancelled');
+    function pay() {
+      let handler = PaystackPop.setup({
+        key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 SA PUBLIC KEY DINKA
+        email: "customer@teleimage.ai",
+        amount: 200 * 100,
+        currency: "NGN",
+        callback: function () {
+          paid = true;
+          document.getElementById("status").innerText =
+            "✅ Payment successful. Download unlocked!";
+          document.getElementById("downloadBtn").style.display =
+            "inline-block";
+        },
+        onClose: function () {
+          alert("Payment cancelled");
+        }
+      });
+      handler.openIframe();
     }
-  });
 
-  handler.openIframe();
-}
-    // ⬇️ DOWNLOAD (ANDROID + PC)
     document.getElementById("downloadBtn").onclick = async () => {
       if (!paid || !lastImageUrl) return;
 
@@ -150,12 +133,10 @@ function pay() {
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-
       a.href = url;
       a.download = "tele-image-ai.png";
       document.body.appendChild(a);
       a.click();
-
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     };
