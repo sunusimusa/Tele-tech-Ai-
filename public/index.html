@@ -3,213 +3,205 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tele Image AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#111827">
+  <meta name="theme-color" content="#0d6efd">
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
+      background: #f4f6f9;
       margin: 0;
       padding: 20px;
       text-align: center;
     }
-
-    h1 {
-      margin-bottom: 5px;
+    .box {
+      max-width: 420px;
+      margin: auto;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,.1);
     }
-
-    p {
-      color: #cbd5e1;
-    }
-
     input {
-      width: 90%;
-      max-width: 400px;
-      padding: 12px;
-      border-radius: 8px;
-      border: none;
+      width: 100%;
+      padding: 10px;
       margin-top: 10px;
-      font-size: 16px;
+      font-size: 14px;
     }
-
     button {
-      margin-top: 12px;
-      padding: 12px 20px;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
       font-size: 15px;
-      border: none;
-      border-radius: 8px;
       cursor: pointer;
-      background: #22c55e;
-      color: #000;
-      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background: #0d6efd;
+      color: white;
     }
-
     button.secondary {
-      background: #38bdf8;
+      background: #198754;
     }
-
-    button.pay {
-      background: #facc15;
+    button.ad {
+      background: #ffc107;
+      color: #000;
     }
-
     #status {
-      margin-top: 12px;
+      margin-top: 10px;
       font-weight: bold;
     }
-
     img {
       max-width: 100%;
-      border-radius: 12px;
       margin-top: 15px;
+      border-radius: 8px;
       display: none;
     }
-
-    #downloadBtn {
+    a#downloadBtn {
       display: none;
-      margin-top: 10px;
-      background: #22c55e;
-    }
-
-    /* Fake Ad */
-    #adBox {
-      display: none;
-      margin-top: 15px;
-      padding: 15px;
-      background: #1e293b;
-      border-radius: 10px;
-    }
-
-    footer {
-      margin-top: 30px;
-      font-size: 13px;
-      color: #94a3b8;
+      margin-top: 12px;
+      text-decoration: none;
+      padding: 10px;
+      background: #212529;
+      color: #fff;
+      border-radius: 6px;
     }
   </style>
 </head>
 
 <body>
+<div class="box">
+  <h2>🎨 Tele Image AI</h2>
 
-<h1>🎨 Tele Image AI</h1>
-<p>Generate AI images instantly</p>
+  <input id="prompt" placeholder="Describe image (e.g. lion wearing glasses)" />
 
-<input id="prompt" placeholder="Describe image (e.g. lion wearing crown)" />
+  <button onclick="generateImage()">Generate Image</button>
 
-<br>
-<button onclick="generateImage()">Generate Image</button>
+  <button id="adBtn" class="ad" style="display:none;">
+    📢 Watch Ad to Unlock Download
+  </button>
 
-<div id="status"></div>
+  <button id="payBtn" class="secondary" style="display:none;">
+    💳 Pay ₦200 to Download
+  </button>
 
-<img id="resultImage" />
+  <p id="status"></p>
 
-<!-- AD -->
-<div id="adBox">
-  <p>📢 Sponsored Ad</p>
-  <button class="secondary" onclick="watchAd()">Watch Ad (+Unlock)</button>
+  <img id="resultImage" />
+
+  <a id="downloadBtn" href="#" download="tele-image-ai.png">
+    ⬇️ Download Image
+  </a>
 </div>
-
-<!-- PAY -->
-<button id="payBtn" class="pay" onclick="payToDownload()" style="display:none;">
-  💳 Pay ₦200 to Download
-</button>
-
-<!-- DOWNLOAD -->
-<button id="downloadBtn" onclick="downloadImage()">⬇️ Download Image</button>
-
-<footer>
-  Install this app from browser menu 📲
-</footer>
 
 <script>
 let lastImageUrl = "";
 let unlocked = false;
 
-/* ================= IMAGE GENERATE ================= */
+/* =====================
+   GENERATE IMAGE
+===================== */
 async function generateImage() {
-  const prompt = document.getElementById("prompt").value;
+  const prompt = document.getElementById("prompt").value.trim();
   if (!prompt) {
-    alert("Enter image description");
+    alert("Please enter prompt");
     return;
   }
 
-  document.getElementById("status").innerText = "⏳ Generating...";
+  unlocked = false;
+  lastImageUrl = "";
+  document.getElementById("status").innerText = "⏳ Generating image...";
   document.getElementById("resultImage").style.display = "none";
   document.getElementById("downloadBtn").style.display = "none";
+  document.getElementById("adBtn").style.display = "none";
   document.getElementById("payBtn").style.display = "none";
-  document.getElementById("adBox").style.display = "none";
-  unlocked = false;
 
-  const res = await fetch("/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt })
-  });
+  try {
+    const res = await fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.limit) {
+    if (data.error) {
+      document.getElementById("status").innerText = "❌ " + data.error;
+      return;
+    }
+
+    lastImageUrl = data.image;
+
+    const img = document.getElementById("resultImage");
+    img.src = data.image;
+    img.style.display = "block";
+
     document.getElementById("status").innerText =
-      "❌ Free limit reached";
-    document.getElementById("adBox").style.display = "block";
+      "✅ Image ready. Watch ad or pay to download.";
+
+    document.getElementById("adBtn").style.display = "block";
     document.getElementById("payBtn").style.display = "block";
-    return;
+
+  } catch (e) {
+    document.getElementById("status").innerText = "❌ Server error";
   }
-
-  lastImageUrl = data.image;
-
-  const img = document.getElementById("resultImage");
-  img.src = data.image;
-  img.style.display = "block";
-
-  document.getElementById("status").innerText = "✅ Image ready";
-  document.getElementById("adBox").style.display = "block";
-  document.getElementById("payBtn").style.display = "block";
 }
 
-/* ================= WATCH AD ================= */
-function watchAd() {
-  document.getElementById("status").innerText = "📺 Watching ad...";
+/* =====================
+   FAKE AD UNLOCK
+===================== */
+document.getElementById("adBtn").onclick = () => {
+  document.getElementById("status").innerText =
+    "📺 Ad playing... please wait";
+
   setTimeout(() => {
     unlocked = true;
-    document.getElementById("status").innerText = "🔓 Download unlocked";
-    document.getElementById("downloadBtn").style.display = "inline-block";
+    document.getElementById("status").innerText =
+      "🔓 Download unlocked (Ad)";
+    showDownload();
   }, 5000);
-}
+};
 
-/* ================= PAYSTACK PLACEHOLDER ================= */
-function payToDownload() {
-  alert("💳 Payment successful (test)");
+/* =====================
+   PAY (PLACEHOLDER)
+===================== */
+document.getElementById("payBtn").onclick = () => {
+  alert("💳 Payment successful (demo)");
   unlocked = true;
-  document.getElementById("downloadBtn").style.display = "inline-block";
+  showDownload();
+};
+
+/* =====================
+   SHOW DOWNLOAD
+===================== */
+function showDownload() {
+  if (!lastImageUrl) return;
+
+  const btn = document.getElementById("downloadBtn");
+  btn.style.display = "block";
+  btn.onclick = async () => {
+    const response = await fetch(lastImageUrl);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tele-image-ai.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 }
 
-/* ================= DOWNLOAD ================= */
-async function downloadImage() {
-  if (!unlocked || !lastImageUrl) return;
-
-  const response = await fetch(lastImageUrl);
-  const blob = await response.blob();
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "tele-image-ai.png";
-  document.body.appendChild(a);
-  a.click();
-
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/* ================= PWA ================= */
+/* =====================
+   PWA INSTALL
+===================== */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js");
 }
 </script>
-
 </body>
 </html>
