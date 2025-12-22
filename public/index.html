@@ -1,1 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Tele Image AI</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
+<h2>🎨 Tele Image AI (FREE)</h2>
+
+<input id="prompt" placeholder="Enter prompt..." />
+<button onclick="generate()">Generate</button>
+
+<p id="status"></p>
+
+<img id="result" style="max-width:300px; display:none;" />
+
+<br><br>
+
+<button id="downloadBtn" disabled>⬇️ Download</button>
+
+<script>
+let imageUrl = "";
+
+async function generate() {
+  const prompt = document.getElementById("prompt").value;
+  document.getElementById("status").innerText = "⏳ Generating...";
+
+  const res = await fetch("/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+
+  const data = await res.json();
+
+  if (data.image) {
+    imageUrl = data.image;
+    document.getElementById("result").src = imageUrl;
+    document.getElementById("result").style.display = "block";
+    document.getElementById("status").innerText = "✅ Image ready";
+
+    // Lock download
+    const btn = document.getElementById("downloadBtn");
+    btn.disabled = true;
+    btn.innerText = "📢 Watch ad to unlock";
+  }
+}
+
+// AD + UNLOCK DOWNLOAD
+document.getElementById("downloadBtn").onclick = () => {
+  alert("📢 Please watch ad (5 seconds)");
+
+  setTimeout(() => {
+    const btn = document.getElementById("downloadBtn");
+    btn.disabled = false;
+    btn.innerText = "⬇️ Download";
+    btn.onclick = () => window.open(imageUrl, "_blank");
+  }, 5000);
+};
+</script>
+
+</body>
+</html>
