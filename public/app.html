@@ -1,123 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <title>Tele Image AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f6f7f9;
-      padding: 20px;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    input {
-      width: 90%;
-      max-width: 400px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-
-    button {
-      padding: 10px 15px;
-      cursor: pointer;
-      margin: 5px;
-    }
-
-    img {
-      max-width: 100%;
-      margin-top: 15px;
-      border-radius: 6px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .msg {
-      margin-top: 10px;
-      font-weight: bold;
-    }
+    body { font-family: Arial; padding: 20px; }
+    img { max-width: 300px; margin-top: 10px; display: block; }
+    button { margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <h1>🎨 Tele Image AI</h1>
+<h2>🍩 Tele Image AI (FREE)</h2>
 
-  <input id="prompt" placeholder="Describe image e.g cat wearing crown" />
-  <br />
-  <button onclick="generate()">Generate</button>
+<input id="prompt" placeholder="Enter prompt" />
+<button onclick="generateImage()">Generate</button>
 
-  <div class="msg" id="status"></div>
+<p id="status"></p>
 
-  <div id="result" class="hidden">
-    <img id="img" />
-    <br />
+<img id="result" />
 
-    <button id="downloadBtn" disabled>
-      🔒 Watch Ad to Download
-    </button>
-  </div>
+<button id="watchAdBtn" style="display:none" onclick="watchAd()">
+  📺 Watch Ad to Unlock Download
+</button>
 
-  <script>
-    let imageUrl = "";
-    let used = 0;
-    const LIMIT = 3; // free limit
+<button id="downloadBtn" disabled onclick="downloadImage()">
+  ⬇️ Download
+</button>
 
-    function generate() {
-      const prompt = document.getElementById("prompt").value.trim();
-      if (!prompt) return alert("Enter prompt");
+<!-- ✅ SCRIPT DINA NAN -->
+<script>
+let lastImageUrl = "";
+let adWatched = false;
 
-      if (used >= LIMIT) {
-        document.getElementById("status").innerText =
-          "❌ Free limit reached. Please watch ad or upgrade.";
-        return;
-      }
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  if (!prompt) return alert("Enter prompt");
 
-      used++;
+  document.getElementById("status").innerText = "⏳ Generating...";
 
-      imageUrl =
-        "https://image.pollinations.ai/prompt/" +
-        encodeURIComponent(prompt);
+  const res = await fetch("/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
 
-      document.getElementById("img").src = imageUrl;
-      document.getElementById("result").classList.remove("hidden");
+  const data = await res.json();
 
-      document.getElementById("downloadBtn").disabled = true;
-      document.getElementById("downloadBtn").innerText =
-        "🔒 Watch Ad to Download";
+  if (data.limit) {
+    document.getElementById("status").innerText =
+      "❌ Free limit reached. Watch ad to unlock.";
+    document.getElementById("watchAdBtn").style.display = "block";
+    return;
+  }
 
-      document.getElementById("status").innerText =
-        "✅ Image ready (" + (LIMIT - used) + " free left)";
-    }
+  lastImageUrl = data.image;
+  document.getElementById("result").src = data.image;
+  document.getElementById("status").innerText = "✅ Image ready";
+  document.getElementById("downloadBtn").disabled = true;
+  document.getElementById("watchAdBtn").style.display = "block";
+}
 
-    // ===== FAKE AD + UNLOCK DOWNLOAD =====
-    document.getElementById("downloadBtn").onclick = () => {
-      alert("📢 Please watch ad to unlock download");
+function watchAd() {
+  alert("📢 Watching ad (5 seconds)...");
+  document.getElementById("status").innerText = "📺 Ad playing...";
 
-      setTimeout(() => {
-        const btn = document.getElementById("downloadBtn");
-        btn.disabled = false;
-        btn.innerText = "⬇️ Download";
-        btn.onclick = downloadImage;
-      }, 5000); // 5 sec fake ad
-    };
+  setTimeout(() => {
+    adWatched = true;
+    document.getElementById("status").innerText = "✅ Ad watched. Download unlocked.";
+    document.getElementById("downloadBtn").disabled = false;
+  }, 5000);
+}
 
-    function downloadImage() {
-      const a = document.createElement("a");
-      a.href = imageUrl;
-      a.download = "tele-image-ai.png";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-  </script>
+function downloadImage() {
+  if (!adWatched) return alert("Watch ad first");
+
+  const a = document.createElement("a");
+  a.href = lastImageUrl;
+  a.download = "tele-image-ai.png";
+  a.click();
+}
+</script>
 
 </body>
 </html>
