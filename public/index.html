@@ -58,75 +58,66 @@
   </a>
 
   <!-- ================= SCRIPT ================= -->
-  <script>
-    let lastImageUrl = "";
+<script>
+let lastImageUrl = "";
+let unlocked = false;
 
-    async function generateImage() {
-      const prompt = document.getElementById("prompt").value;
-      if (!prompt) {
-        alert("Enter prompt");
-        return;
-      }
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  if (!prompt) return alert("Enter prompt");
 
-      document.getElementById("status").innerText = "⏳ Generating...";
-      document.getElementById("watchAdBtn").style.display = "none";
-      document.getElementById("downloadBtn").style.pointerEvents = "none";
-      document.getElementById("downloadBtn").style.opacity = "0.5";
+  document.getElementById("status").innerText = "⏳ Generating...";
 
-      const res = await fetch("/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
-      });
+  const res = await fetch("/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
 
-      const data = await res.json();
+  const data = await res.json();
 
-      lastImageUrl = data.image;
+  // idan limit ya kare
+  if (data.limit) {
+    document.getElementById("status").innerText =
+      "❌ Free limit reached. Watch ad to unlock.";
+    document.getElementById("watchAdBtn").style.display = "block";
+    return;
+  }
 
-      const img = document.getElementById("result");
-      img.src = data.image;
-      img.style.display = "block";
+  // ✅ IMAGE READY
+  lastImageUrl = data.image;
 
-      document.getElementById("status").innerText =
-        "✅ Image ready (watch ad to download)";
+  const img = document.getElementById("result");
+  img.src = lastImageUrl;
 
-      document.getElementById("watchAdBtn").style.display = "block";
-    }
+  document.getElementById("status").innerText = "✅ Image ready";
 
-    function watchAd() {
-      document.getElementById("status").innerText =
-        "📺 Watching ad... please wait";
+  // Kulle download har sai an kalli ad
+  const dBtn = document.getElementById("downloadBtn");
+  dBtn.style.pointerEvents = "none";
+  dBtn.style.opacity = "0.5";
+  unlocked = false;
+}
 
-      // FAKE AD (5 seconds)
-      setTimeout(() => {
-        const dl = document.getElementById("downloadBtn");
-        dl.href = lastImageUrl;
-        dl.style.pointerEvents = "auto";
-        dl.style.opacity = "1";
-
-        document.getElementById("watchAdBtn").style.display = "none";
-        document.getElementById("status").innerText =
-          "✅ Ad completed. You can download now!";
-      }, 5000);
-    }
-    
+// 👉 WATCH AD (FAKE AD 5s)
 document.getElementById("watchAdBtn").onclick = () => {
   document.getElementById("status").innerText =
     "📺 Watching ad... please wait";
 
-  // fake ad timer (10 seconds)
   setTimeout(() => {
     unlocked = true;
 
+    const dBtn = document.getElementById("downloadBtn");
+    dBtn.href = lastImageUrl;   // 🔥 NAN NE MUHIMMI
+    dBtn.style.pointerEvents = "auto";
+    dBtn.style.opacity = "1";
+
     document.getElementById("status").innerText =
-      "✅ Ad watched. Download unlocked";
-
-    const btn = document.getElementById("downloadBtn");
-    btn.style.pointerEvents = "auto";
-    btn.style.opacity = "1";
-  }, 10000);
-};
+      "✅ Download unlocked!";
+  }, 5000);
+}; 
+  
 </script>
-
+  
 </body>
 </html>
