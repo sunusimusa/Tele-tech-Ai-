@@ -1,61 +1,214 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Tele AI Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Paystack -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
- <link rel="stylesheet" href="style.css">
- <script src="https://js.paystack.co/v1/inline.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    #chat {
+      border: 1px solid #ccc;
+      background: #fff;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .msg {
+      margin-bottom: 8px;
+    }
+
+    .user {
+      color: #2563eb;
+      font-weight: bold;
+    }
+
+    .ai {
+      color: #111827;
+    }
+
+    input, button, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .pro {
+      background: #16a34a;
+      color: white;
+    }
+
+    .pay {
+      background: #2563eb;
+      color: white;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>💬 Tele AI Chat</h2>
+<h2>🤖 Tele AI Chat</h2>
 
-<div id="chatBox"></div>
+<div id="chat"></div>
 
-<textarea id="message" placeholder="Rubuta sako..." rows="3"></textarea>
-<br>
+<input id="message" placeholder="Rubuta sakonka..." />
 <button onclick="sendMessage()">Send</button>
 
-<p id="status"></p>
+<div id="status"></div>
 
-<div id="upgrade">
-<button onclick="pay(7)">Upgrade ₦500 (1 week)</button>
-<button onclick="pay(14)">Upgrade ₦900 (2 weeks)</button>
-<button onclick="pay(30)">Upgrade ₦1500 (1 month)</button>
-</div>
+<hr>
+
+<h3>🚀 Upgrade to PRO</h3>
+
+<select id="plan">
+  <option value="1">₦500 — 1 Day</option>
+  <option value="14">₦2000 — 2 Weeks</option>
+  <option value="30">₦3500 — 1 Month</option>
+</select>
+
+<button class="pay" onclick="pay()">Upgrade with Paystack</button>
 
 <script>
-function pay(days) {
-  let amount = days === 7 ? 500 : days === 14 ? 900 : 1500;
+/* ======================
+   STATE
+====================== */
+let chatBox = document.getElementById("chat");
+let statusBox = document.getElementById("status");
 
-  let handler = PaystackPop.setup({
-    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // ⚠️ LIVE PUBLIC KEY
-    email: "user@teleai.chat",
+let freeUntil = localStorage.getItem("freeUntil");
+let proUntil = localStorage.getItem("proUntil");
+
+/* ======================
+   INIT FREE 8 HOURS
+====================== */
+if (!freeUntil && !proUntil) {
+  const now = Date.now();
+  freeUntil = now + (8 * 60 * 60 * 1000); // 8 hours
+  localStorage.setItem("freeUntil", freeUntil);
+}
+
+/* ======================
+   CHECK ACCESS
+====================== */
+function hasAccess() {
+  const now = Date.now();
+
+  if (proUntil && now < proUntil) return true;
+  if (freeUntil && now < freeUntil) return true;
+
+  return false;
+}
+
+/* ======================
+   SEND MESSAGE
+====================== */
+async function sendMessage() {
+  const input = document.getElementById("message");
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (!hasAccess()) {
+    statusBox.innerText = "❌ Free time expired. Please upgrade to PRO.";
+    return;
+  }
+
+  chatBox.innerHTML += `
+    <div class="msg"><span class="user">You:</span> ${text}</div>
+  `;
+  input.value = "";
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  statusBox.innerText = "⏳ AI is typing...";
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    chatBox.innerHTML += `
+      <div class="msg"><span class="ai">AI:</span> ${data.reply}</div>
+    `;
+    chatBox.scrollTop = chatBox.scrollHeight;
+    statusBox.innerText = "";
+
+  } catch (e) {
+    statusBox.innerText = "❌ Network or server error";
+  }
+}
+
+/* ======================
+   PAYSTACK
+====================== */
+function pay() {
+  const days = parseInt(document.getElementById("plan").value);
+
+  let amount = 500;
+  if (days === 14) amount = 2000;
+  if (days === 30) amount = 3500;
+
+  const handler = PaystackPop.setup({
+    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 SA PUBLIC KEY DINKA
+    email: "user@teleai.app",
     amount: amount * 100,
     currency: "NGN",
     callback: function (response) {
-      fetch("/verify-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reference: response.reference,
-          days: days
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          alert("✅ PRO ya kunna na kwanaki " + days);
-        } else {
-          alert("❌ Payment verify ya fadi");
-        }
-      });
+      const now = Date.now();
+      proUntil = now + (days * 24 * 60 * 60 * 1000);
+      localStorage.setItem("proUntil", proUntil);
+      statusBox.innerText = "✅ PRO activated successfully!";
     }
   });
 
   handler.openIframe();
 }
+
+/* ======================
+   SHOW STATUS
+====================== */
+(function updateStatus() {
+  const now = Date.now();
+
+  if (proUntil && now < proUntil) {
+    const hrs = Math.ceil((proUntil - now) / 3600000);
+    statusBox.innerText = `🌟 PRO active — ${hrs}h remaining`;
+  } else if (freeUntil && now < freeUntil) {
+    const hrs = Math.ceil((freeUntil - now) / 3600000);
+    statusBox.innerText = `🆓 Free chat — ${hrs}h remaining`;
+  } else {
+    statusBox.innerText = "❌ Free expired. Upgrade to continue.";
+  }
+})();
 </script>
 
 </body>
