@@ -1,33 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
   <title>Tele AI Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Paystack -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <script src="https://js.paystack.co/v1/inline.js"></script>
-
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h2>💬 Tele AI Chat</h2>
+<h2>💬 Tele AI Chat</h2>
 
-  <textarea id="message" placeholder="Type your message..."></textarea>
+<textarea id="msg" placeholder="Rubuta sakonka..."></textarea>
+<button onclick="send()">Send</button>
 
-  <button onclick="sendMessage()">Send</button>
+<p id="status"></p>
+<div id="reply"></div>
 
-  <p id="status"></p>
+<hr>
 
-  <div id="reply"></div>
+<button onclick="pay('1w',500)">Upgrade ₦500 (1 week)</button>
+<button onclick="pay('2w',900)">Upgrade ₦900 (2 weeks)</button>
+<button onclick="pay('1m',1500)">Upgrade ₦1500 (1 month)</button>
 
-  <hr />
-
-  <button onclick="pay('week')">Upgrade ₦500 (1 week)</button>
-  <button onclick="pay('2weeks')">Upgrade ₦900 (2 weeks)</button>
-  <button onclick="pay('month')">Upgrade ₦1500 (1 month)</button>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
