@@ -11,19 +11,20 @@
 
 <h2>💬 Tele AI Chat</h2>
 
-<textarea id="msg" placeholder="Rubuta sakonka..."></textarea>
-<button onclick="sendMsg()">Send</button>
+<div id="chatBox"></div>
+
+<textarea id="message" placeholder="Rubuta sako..." rows="3"></textarea>
+<br>
+<button onclick="sendMessage()">Send</button>
 
 <p id="status"></p>
-<div id="chat"></div>
 
-<hr>
-
-<div class="upgrade">
-  <button onclick="pay(500, 7)">Upgrade ₦500 (1 week)</button>
-  <button onclick="pay(900, 14)">Upgrade ₦900 (2 weeks)</button>
-  <button onclick="pay(1500, 30)">Upgrade ₦1500 (1 month)</button>
+<div id="upgrade">
+  <button onclick="upgrade(7)">Upgrade ₦500 (1 week)</button>
+  <button onclick="upgrade(14)">Upgrade ₦900 (2 weeks)</button>
+  <button onclick="upgrade(30)">Upgrade ₦1500 (1 month)</button>
 </div>
+
 <script>
 function pay(amount, days) {
   const handler = PaystackPop.setup({
