@@ -31,3 +31,34 @@ async function sendMsg() {
   chatBox.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
   status.innerText = "⏳ " + data.remaining;
 }
+function pay(amount, days) {
+  let handler = PaystackPop.setup({
+    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba",
+    email: "user@example.com",
+    amount: amount * 100,
+    currency: "NGN",
+    callback: function (response) {
+      fetch("/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: response.reference,
+          days: days
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("PRO ya kunna na kwanaki " + data.proDays);
+        } else {
+          alert("Biyan bai yi nasara ba");
+        }
+      });
+    },
+    onClose: function () {
+      alert("An rufe biya");
+    }
+  });
+
+  handler.openIframe();
+}
