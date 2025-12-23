@@ -6,7 +6,7 @@ app.use(express.static("public"));
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 
-// HEALTH CHECK (Render yana bukata)
+// HEALTH CHECK (Render)
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
@@ -20,7 +20,7 @@ app.post("/generate", async (req, res) => {
     }
 
     const response = await fetch(
-      "https://api.openai.com/v1/images",
+      "https://api.openai.com/v1/images/generations",
       {
         method: "POST",
         headers: {
@@ -29,7 +29,7 @@ app.post("/generate", async (req, res) => {
         },
         body: JSON.stringify({
           model: "gpt-image-1",
-          prompt: `High quality, realistic image of: ${prompt}`,
+          prompt: `High quality realistic image of: ${prompt}`,
           size: "1024x1024"
         })
       }
@@ -37,7 +37,7 @@ app.post("/generate", async (req, res) => {
 
     const data = await response.json();
 
-    if (!data.data || !data.data[0]) {
+    if (!data.data || !data.data[0]?.url) {
       console.error(data);
       return res.status(500).json({ error: "OpenAI failed" });
     }
@@ -50,6 +50,7 @@ app.post("/generate", async (req, res) => {
   }
 });
 
+// PORT (Render)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
