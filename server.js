@@ -1,83 +1,51 @@
-const express = require("express");
-const path = require("path");
-const axios = require("axios");
+import express from "express";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 10000;
-
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("public"));
 
-/* ================= PAYSTACK ================= */
-const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
-
-/* ================= HOME ================= */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-/* ================= GENERATE IMAGE (FREE) ================= */
-/* A nan kana hada AI dinka, yanzu mock ne */
+/* IMAGE GENERATE (misali OpenAI / Pollinations) */
 app.post("/generate", async (req, res) => {
   const { prompt } = req.body;
-  if (!prompt) {
-    return res.json({ error: "Prompt required" });
-  }
 
-  // ⚠️ 
-  const fakeImage =
-    "https://picsum.photos/1024/1024?random=" + Date.now();
+  const imageUrl =
+    "https://image.pollinations.ai/prompt/" +
+    encodeURIComponent(prompt);
 
-  res.json({
-    image: fakeImage
-  });
+  res.json({ image: imageUrl });
 });
-app.post("/verify-payment", async (req, res) => {
-  const { reference } = req.body;
 
-  const verify = await fetch(
-    `https://api.paystack.co/transaction/verify/${reference}`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`
-      }
-    }
-  );
-
-  const data = await verify.json();
-
-  if (data.status && data.data.status === "success") {
-    return res.json({ success: true });
-  }
-
-  res.status(400).json({ success: false });
-});
-/* ================= VERIFY PAYMENT ================= */
+/* PAYSTACK VERIFY */
 app.post("/verify-payment", async (req, res) => {
   const { reference } = req.body;
 
   try {
-    const response = await axios.get(
+    const response = await fetch(
       `https://api.paystack.co/transaction/verify/${reference}`,
       {
         headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET}`
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
         }
       }
     );
 
-    if (response.data.data.status === "success") {
+    const data = await response.json();
+
+    if (data.data && data.data.status === "success") {
       return res.json({ success: true });
     } else {
       return res.json({ success: false });
     }
   } catch (err) {
-    console.error("VERIFY ERROR:", err.message);
-    res.status(500).json({ success: false });
+    return res.json({ success: false });
   }
 });
 
-/* ================= START ================= */
-app.listen(PORT, () => {
-  console.log("✅ Server running on port", PORT);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () =>
+  console.log("Server running on port " + PORT)
+);
