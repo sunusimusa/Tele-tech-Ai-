@@ -24,9 +24,10 @@ app.post("/generate", async (req, res) => {
         },
         body: JSON.stringify({
           model: "gpt-image-1",
-          prompt: `High quality realistic image of: ${prompt}`,
-          size: "1024x1024",
-        }),
+          prompt: `High quality realistic image 
+       of: ${prompt}`,
+          size: "1024x1024"
+       })
       }
     );
 
