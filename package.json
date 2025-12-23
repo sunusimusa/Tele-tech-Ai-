@@ -1,5 +1,5 @@
 {
-  "name": "tele-image-ai",
+  "name": "tele-image-ai-chat",
   "version": "1.0.0",
   "type": "module",
   "main": "server.js",
