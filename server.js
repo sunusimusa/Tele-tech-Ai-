@@ -1,50 +1,49 @@
 import express from "express";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
 app.use(express.static("public"));
 
-/* HEALTH CHECK */
+const OPENAI_KEY = process.env.OPENAI_API_KEY;
+
+// Health check (Render yana bukata)
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-/* IMAGE GENERATION */
-app.post("/generate", async (req, res) => {
+// AI CHAT endpoint
+app.post("/chat", async (req, res) => {
   try {
-    const { prompt } = req.body;
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt required" });
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: "No message provided" });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "OpenAI key missing" });
-    }
-
-    const response = await fetch("https://api.openai.com/v1/images/generations", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${OPENAI_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-image-1",
-        prompt: `High quality realistic image of: ${prompt}`,
-        size: "1024x1024"
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a helpful AI assistant." },
+          { role: "user", content: message }
+        ]
       })
     });
 
     const data = await response.json();
 
-    if (!data.data || !data.data[0]?.url) {
+    if (!data.choices) {
       console.error(data);
       return res.status(500).json({ error: "OpenAI response error" });
     }
 
-    res.json({ image: data.data[0].url });
+    res.json({
+      reply: data.choices[0].message.content
+    });
 
   } catch (err) {
     console.error(err);
@@ -52,6 +51,7 @@ app.post("/generate", async (req, res) => {
   }
 });
 
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
