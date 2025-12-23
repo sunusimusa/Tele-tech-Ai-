@@ -1,57 +1,33 @@
-const chat = document.getElementById("chat");
+const chatBox = document.getElementById("chat");
+const input = document.getElementById("msg");
 const status = document.getElementById("status");
 
-async function send() {
-  const email = document.getElementById("email").value;
-  const msg = document.getElementById("msg").value;
+const email =
+  localStorage.getItem("email") ||
+  prompt("Enter your email");
 
-  if (!email || !msg) return alert("Fill all fields");
+localStorage.setItem("email", email);
 
-  chat.innerHTML += `<p><b>You:</b> ${msg}</p>`;
-  document.getElementById("msg").value = "";
+async function sendMsg() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  chatBox.innerHTML += `<p><b>You:</b> ${text}</p>`;
+  input.value = "";
 
   const res = await fetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, message: msg })
+    body: JSON.stringify({ email, message: text })
   });
 
   const data = await res.json();
 
-  if (data.error) {
-    status.innerText = "❌ " + data.error;
-  } else {
-    chat.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
-    status.innerText = "";
+  if (data.locked) {
+    status.innerText = "🔒 Free time finished. Upgrade to PRO.";
+    return;
   }
-}
 
-function pay(plan) {
-  const email = document.getElementById("email").value;
-  if (!email) return alert("Enter email");
-
-  const handler = PaystackPop.setup({
-    key: "YOUR_PAYSTACK_PUBLIC_KEY",
-    email,
-    amount:
-      plan === "1day" ? 50000 :
-      plan === "2weeks" ? 200000 :
-      300000,
-    currency: "NGN",
-    callback: function (res) {
-      fetch("/verify-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          reference: res.reference,
-          plan
-        })
-      }).then(() => {
-        alert("✅ PRO Activated");
-      });
-    }
-  });
-
-  handler.openIframe();
+  chatBox.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
+  status.innerText = "⏳ " + data.remaining;
 }
