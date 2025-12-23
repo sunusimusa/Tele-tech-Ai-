@@ -5,66 +5,21 @@ import fetch from "node-fetch";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 10000;
-
 app.use(express.json());
 app.use(express.static("public"));
 
-/* =========================
-   IN-MEMORY USERS (REAL LOGIC)
-========================= */
-const users = {}; 
-// users[email] = { freeUntil, proUntil }
-
-/* =========================
-   HELPERS
-========================= */
-function now() {
-  return Date.now();
-}
-
-function hours(h) {
-  return h * 60 * 60 * 1000;
-}
-
-function days(d) {
-  return d * 24 * 60 * 60 * 1000;
-}
-
-/* =========================
-   HEALTH
-========================= */
+/* ================= HEALTH ================= */
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-/* =========================
-   AI CHAT
-========================= */
+/* ================= AI CHAT ================= */
 app.post("/chat", async (req, res) => {
   try {
-    const { message, email } = req.body;
-    if (!message || !email) {
-      return res.status(400).json({ error: "Missing message or email" });
-    }
+    const { message } = req.body;
 
-    // create user if not exists
-    if (!users[email]) {
-      users[email] = {
-        freeUntil: now() + hours(8), // ⏱️ 8 hours free
-        proUntil: 0
-      };
-    }
-
-    const user = users[email];
-
-    const hasAccess =
-      now() < user.freeUntil || now() < user.proUntil;
-
-    if (!hasAccess) {
-      return res.json({
-        error: "Free time expired. Upgrade to PRO."
-      });
+    if (!message) {
+      return res.status(400).json({ error: "No message provided" });
     }
 
     const response = await fetch(
@@ -87,59 +42,23 @@ app.post("/chat", async (req, res) => {
 
     const data = await response.json();
 
+    if (!data.choices) {
+      console.error(data);
+      return res.status(500).json({ error: "AI response error" });
+    }
+
     res.json({
       reply: data.choices[0].message.content
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("CHAT ERROR:", err);
     res.status(500).json({ error: "AI error" });
   }
 });
 
-/* =========================
-   PAYSTACK VERIFY (UPGRADE)
-========================= */
-app.post("/verify-payment", async (req, res) => {
-  const { email, reference, plan } = req.body;
-
-  try {
-    const verify = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-        }
-      }
-    );
-
-    const data = await verify.json();
-
-    if (!data.status || data.data.status !== "success") {
-      return res.json({ success: false });
-    }
-
-    if (!users[email]) {
-      users[email] = {
-        freeUntil: now() + hours(8),
-        proUntil: 0
-      };
-    }
-
-    if (plan === "1day") users[email].proUntil = now() + days(1);
-    if (plan === "2weeks") users[email].proUntil = now() + days(14);
-    if (plan === "1month") users[email].proUntil = now() + days(30);
-
-    res.json({ success: true });
-
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-/* =========================
-   START
-========================= */
+/* ================= START ================= */
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("✅ Server running on port", PORT);
 });
