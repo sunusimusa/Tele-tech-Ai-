@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Tele Image AI</title>
+  <title>Tele AI Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -12,75 +12,95 @@
       padding: 20px;
       text-align: center;
     }
-    input, button {
-      width: 90%;
-      max-width: 350px;
-      padding: 14px;
-      margin-top: 10px;
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    #chatBox {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      padding: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
-      font-size: 16px;
     }
+
     button {
-      background: #2563eb;
-      color: #fff;
-      border: none;
-    }
-    img {
-      margin-top: 15px;
-      max-width: 100%;
-      border-radius: 8px;
-      display: none;
-    }
-    #status {
+      width: 100%;
       margin-top: 10px;
-      font-weight: bold;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .msg {
+      text-align: left;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .user {
+      background: #e0f2fe;
+    }
+
+    .ai {
+      background: #dcfce7;
     }
   </style>
 </head>
 
 <body>
 
-  <h2>🎨 Tele Image AI</h2>
+  <h2>💬 Tele AI Chat</h2>
 
-  <input id="prompt" placeholder="Describe image (e.g. dog wearing glasses)" />
-  <button onclick="generate()">Generate Image</button>
-
-  <p id="status"></p>
-  <img id="result" />
+  <div id="chatBox">
+    <textarea id="message" placeholder="Ask me anything..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+    <div id="messages"></div>
+  </div>
 
   <script>
-    async function generate() {
-      const prompt = document.getElementById("prompt").value;
-      if (!prompt) {
-        alert("Enter prompt");
-        return;
-      }
+    async function sendMessage() {
+      const msg = document.getElementById("message").value;
+      if (!msg) return;
 
-      document.getElementById("status").innerText = "⏳ Generating...";
-      document.getElementById("result").style.display = "none";
+      const messagesDiv = document.getElementById("messages");
 
-      try {
-        const res = await fetch("/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt })
-        });
+      messagesDiv.innerHTML += `
+        <div class="msg user"><b>You:</b> ${msg}</div>
+      `;
 
-        const data = await res.json();
+      document.getElementById("message").value = "";
 
-        if (!data.image) {
-          document.getElementById("status").innerText = "❌ Generation failed";
-          return;
-        }
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg })
+      });
 
-        const img = document.getElementById("result");
-        img.src = data.image;
-        img.style.display = "block";
-        document.getElementById("status").innerText = "✅ Image generated";
+      const data = await res.json();
 
-      } catch (err) {
-        document.getElementById("status").innerText = "❌ Server error";
+      if (data.reply) {
+        messagesDiv.innerHTML += `
+          <div class="msg ai"><b>AI:</b> ${data.reply}</div>
+        `;
+      } else {
+        messagesDiv.innerHTML += `
+          <div class="msg ai">❌ Error</div>
+        `;
       }
     }
   </script>
