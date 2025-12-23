@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tele AI Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 400px;
+      height: 80px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 12px;
+      width: 100%;
+      max-width: 400px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #reply {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      display: none;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>💬 Tele AI Chat</h2>
+
+  <textarea id="message" placeholder="Ask anything..."></textarea>
+
+  <button onclick="sendMessage()">Send</button>
+
+  <p id="status"></p>
+
+  <div id="reply"></div>
+
+  <script>
+    async function sendMessage() {
+      const msg = document.getElementById("message").value;
+      if (!msg) return;
+
+      document.getElementById("status").innerText = "⏳ Thinking...";
+      document.getElementById("reply").style.display = "none";
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg })
+        });
+
+        const data = await res.json();
+
+        if (data.reply) {
+          document.getElementById("reply").innerText = data.reply;
+          document.getElementById("reply").style.display = "block";
+          document.getElementById("status").innerText = "✅ Done";
+        } else {
+          document.getElementById("status").innerText = "❌ Error";
+        }
+
+      } catch (e) {
+        document.getElementById("status").innerText = "❌ Server error";
+      }
+    }
+  </script>
+
+</body>
+</html>
