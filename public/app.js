@@ -1,33 +1,22 @@
-const FREE_HOURS = 8;
-const STORAGE_KEY = "tele_free_start";
+const userId = localStorage.getItem("uid") || crypto.randomUUID();
+localStorage.setItem("uid", userId);
 
-function canUseFree() {
-  const start = localStorage.getItem(STORAGE_KEY);
-  if (!start) {
-    localStorage.setItem(STORAGE_KEY, Date.now());
-    return true;
-  }
-  const hoursPassed = (Date.now() - start) / (1000 * 60 * 60);
-  return hoursPassed < FREE_HOURS;
-}
+async function send() {
+  const msg = document.getElementById("msg").value;
+  document.getElementById("status").innerText = "⏳";
 
-async function sendMessage() {
-  if (!canUseFree()) {
-    document.getElementById("status").innerText =
-      "⛔ Free limit reached. Please upgrade.";
-    return;
-  }
-
-  const msg = document.getElementById("message").value;
-  document.getElementById("status").innerText = "⏳ Thinking...";
-
-  const res = await fetch("/chat", {
+  const r = await fetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
+    body: JSON.stringify({ userId, message: msg })
   });
 
-  const data = await res.json();
+  const data = await r.json();
+
+  if (data.error === "LIMIT_REACHED") {
+    document.getElementById("status").innerText = "❌ Free time finished";
+    return;
+  }
 
   if (data.reply) {
     document.getElementById("reply").innerText = data.reply;
@@ -37,44 +26,21 @@ async function sendMessage() {
   }
 }
 
-/* =========================
-   PAYSTACK
-========================= */
-function pay(plan) {
-  const prices = {
-    week: 500,
-    "2weeks": 900,
-    month: 1500
-  };
-
-  const handler = PaystackPop.setup({
-    key: window.PAYSTACK_PUBLIC_KEY || "pk_live_xxxxx",
-    email: "user@teleai.chat",
-    amount: prices[plan] * 100,
-    currency: "NGN",
-    callback: function (response) {
-      verifyPayment(response.reference);
+function pay(plan, amount) {
+  PaystackPop.setup({
+    key: PAYSTACK_PUBLIC_KEY, // injected by server
+    email: "user@tele.ai",
+    amount: amount * 100,
+    callback: function (res) {
+      fetch("/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: res.reference,
+          userId,
+          plan
+        })
+      }).then(() => alert("✅ Pro activated"));
     }
-  });
-
-  handler.openIframe();
-}
-
-async function verifyPayment(reference) {
-  const res = await fetch("/verify-payment", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reference })
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    document.getElementById("status").innerText =
-      "✅ Pro unlocked!";
-    localStorage.removeItem(STORAGE_KEY);
-  } else {
-    document.getElementById("status").innerText =
-      "❌ Payment verification failed";
-  }
+  }).openIframe();
 }
