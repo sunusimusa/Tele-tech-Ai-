@@ -20,15 +20,17 @@
 <p id="status"></p>
 
 <div id="upgrade">
-  <button onclick="upgrade(7)">Upgrade ₦500 (1 week)</button>
-  <button onclick="upgrade(14)">Upgrade ₦900 (2 weeks)</button>
-  <button onclick="upgrade(30)">Upgrade ₦1500 (1 month)</button>
+<button onclick="pay(7)">Upgrade ₦500 (1 week)</button>
+<button onclick="pay(14)">Upgrade ₦900 (2 weeks)</button>
+<button onclick="pay(30)">Upgrade ₦1500 (1 month)</button>
 </div>
 
 <script>
-function pay(amount, days) {
-  const handler = PaystackPop.setup({
-    key: "pk_live_SAKA_NAKA_ANAN", // ❗ PUBLIC KEY LIVE
+function pay(days) {
+  let amount = days === 7 ? 500 : days === 14 ? 900 : 1500;
+
+  let handler = PaystackPop.setup({
+    key: "pk_live_SAKA_NAKI_ANAN", // ⚠️ LIVE PUBLIC KEY
     email: "user@teleai.chat",
     amount: amount * 100,
     currency: "NGN",
@@ -44,14 +46,11 @@ function pay(amount, days) {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          alert("✅ Upgrade successful!");
+          alert("✅ PRO ya kunna na kwanaki " + days);
         } else {
-          alert("❌ Payment not verified");
+          alert("❌ Payment verify ya fadi");
         }
       });
-    },
-    onClose: function () {
-      alert("Payment cancelled");
     }
   });
 
