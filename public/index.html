@@ -8,49 +8,37 @@
   <!-- PAYSTACK -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js")
-    .then(() => console.log("SW registered"))
-    .catch(err => console.log("SW error", err));
-}
-</script>
-  
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#2563eb">
-  
-  <h2>🤖 Tele AI Chat</h2>
 
-  <!-- CHAT BOX -->
-  <div id="chatBox"></div>
+<h2>🤖 Tele AI Chat</h2>
 
-  <!-- INPUT -->
-  <textarea id="message" placeholder="Rubuta sakonka..."></textarea>
-  <button id="sendBtn">Send Message</button>
+<div id="chatBox"></div>
 
-  <p id="status"></p>
+<textarea id="message" placeholder="Rubuta sakonka..."></textarea>
+<button onclick="sendMessage()">Send Message</button>
 
-  <hr>
+<p id="status"></p>
 
-  <!-- PRO UPGRADE -->
-  <button onclick="upgrade(7, 500)">Upgrade ₦500 (1 week)</button>
-  <button onclick="upgrade(14, 900)">Upgrade ₦900 (2 weeks)</button>
-  <button onclick="upgrade(30, 1500)">Upgrade ₦1500 (1 month)</button>
+<hr>
 
-  <hr>
+<!-- PRO UPGRADE -->
+<button onclick="upgrade(7, 500)">Upgrade ₦500 (1 week)</button>
+<button onclick="upgrade(14, 900)">Upgrade ₦900 (2 weeks)</button>
+<button onclick="upgrade(30, 1500)">Upgrade ₦1500 (1 month)</button>
 
-  <!-- ================= ADS BANNER (SAFE PLACE) ================= -->
-  <div id="ads" style="margin-top:20px;text-align:center">
-    <small>Advertisement</small><br>
-    <!-- 🔽 SAKA ADS SCRIPT ANAN 🔽 -->
-    <!-- <script src="ADS_SCRIPT_URL"></script> -->
-  </div>
-  <!-- =========================================================== -->
+<hr>
 
-  <!-- FRONTEND LOGIC -->
-  <script src="app.js"></script>
+<!-- ADS -->
+<div id="ads" style="text-align:center;margin-top:20px">
+  <small>Advertisement</small><br>
+  <!-- ADS SCRIPT ANAN -->
+</div>
+
+<script src="app.js"></script>
 </body>
-    </html>
+</html>
