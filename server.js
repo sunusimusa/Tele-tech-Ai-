@@ -31,5 +31,30 @@ app.post("/generate", async (req, res) => {
     res.json({ error: "Generation failed" });
   }
 });
+import fetch from "node-fetch";
 
+app.post("/verify-payment", async (req, res) => {
+  const { reference } = req.body;
+
+  try {
+    const response = await fetch(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.status && data.data.status === "success") {
+      return res.json({ success: true });
+    } else {
+      return res.status(400).json({ success: false });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
 app.listen(3000, () => console.log("Server running"));
