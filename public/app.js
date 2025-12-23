@@ -1,38 +1,44 @@
-async function sendMsg() {
-  const msg = document.getElementById("msg").value;
-  document.getElementById("status").innerText = "Loading...";
+// public/app.js
 
-  const res = await fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
-  });
+const chatBox = document.getElementById("chatBox");
+const input = document.getElementById("message");
+const sendBtn = document.getElementById("sendBtn");
 
-  const data = await res.json();
-
-  if (data.error) {
-    document.getElementById("status").innerText = data.error;
-    return;
-  }
-
-  document.getElementById("chat").innerHTML +=
-    `<p><b>AI:</b> ${data.reply}</p>`;
-  document.getElementById("status").innerText = "✅";
+/* ADD MESSAGE TO UI */
+function addMessage(text, sender) {
+  const div = document.createElement("div");
+  div.className = sender === "user" ? "msg user" : "msg ai";
+  div.innerText = text;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function pay(plan, amount) {
-  const handler = PaystackPop.setup({
-    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 👉 PUBLIC KEY
-    email: "user@teleai.com",
-    amount: amount * 100,
-    currency: "NGN",
-    callback: function (res) {
-      fetch("/verify-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reference: res.reference, plan })
-      }).then(() => alert("Upgrade successful"));
+/* SEND MESSAGE */
+sendBtn.onclick = async () => {
+  const text = input.value.trim();
+  if (!text) return;
+
+  // (N) USER MESSAGE
+  addMessage(text, "user");
+  input.value = "";
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    if (data.reply) {
+      // (A) AI MESSAGE
+      addMessage("AI: " + data.reply, "ai");
+    } else {
+      addMessage("❌ AI error", "ai");
     }
-  });
-  handler.openIframe();
-}
+
+  } catch (err) {
+    addMessage("❌ Server error", "ai");
+  }
+};
