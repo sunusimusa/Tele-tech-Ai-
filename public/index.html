@@ -3,157 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tele Image AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Paystack -->
+  <!-- PAYSTACK -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
-
-  <!-- Adsterra SAFE (Non-adult) -->
-  <!-- ⚠️ KA MAYE GURBIN src DA NAKA DAGA ADSTERRA -->
-  <script src="https://pl28312948.effectiveratecpm.com/INSERT_YOUR_AD_CODE.js"></script>
 
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f4f6f8;
       padding: 20px;
       text-align: center;
-      background: #f9f9f9;
     }
-
-    input {
-      padding: 10px;
-      width: 80%;
-      max-width: 320px;
-    }
-
-    button {
-      padding: 10px 15px;
+    input, button {
+      width: 90%;
+      max-width: 350px;
+      padding: 14px;
       margin-top: 10px;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      border: none;
       cursor: pointer;
     }
-
-    img {
-      max-width: 300px;
-      margin-top: 15px;
-      display: none;
-    }
-
-    #downloadBtn {
-      display: none;
-    }
-
-    #payBtn {
-      display: none;
-      background: green;
-      color: white;
-      border: none;
-    }
+    #generateBtn { background: #2563eb; color: white; }
+    #payBtn { background: #16a34a; color: white; display: none; }
+    #downloadBtn { background: #111827; color: white; display: none; }
+    img { max-width: 100%; margin-top: 15px; display: none; border-radius: 8px; }
   </style>
 </head>
 
 <body>
 
-  <h2>🍔 Tele Image AI</h2>
+  <h2>🎨 Tele Image AI</h2>
 
-  <input id="prompt" placeholder="Describe image..." />
-  <br>
-
-  <button onclick="generateImage()">Generate</button>
+  <input id="prompt" placeholder="Describe image (e.g. dogs playing)" />
+  <button id="generateBtn">Generate Image</button>
 
   <p id="status"></p>
-
   <img id="result" />
 
-  <br>
+  <button id="payBtn">💳 Pay ₦200 to Download</button>
+  <button id="downloadBtn">⬇️ Download Image</button>
 
-  <button id="payBtn" onclick="pay()">
-    💳 Pay ₦200 to Download
-  </button>
-
-  <br>
-
-  <button id="downloadBtn" onclick="downloadImage()">
-    ⬇️ Download Image
-  </button>
-
-  <!-- ================= SCRIPT ================= -->
   <script>
-    let lastImageUrl = "";
-    let paid = false;
+    let imageUrl = "";
 
-    async function generateImage() {
+    document.getElementById("generateBtn").onclick = async () => {
       const prompt = document.getElementById("prompt").value;
-      if (!prompt) {
-        alert("Enter prompt");
-        return;
-      }
+      if (!prompt) return alert("Enter prompt");
 
-      document.getElementById("status").innerText = "⏳ Generating...";
-      document.getElementById("result").style.display = "none";
-      document.getElementById("downloadBtn").style.display = "none";
+      document.getElementById("status").innerText = "Generating...";
       document.getElementById("payBtn").style.display = "none";
-      paid = false;
+      document.getElementById("downloadBtn").style.display = "none";
 
       const res = await fetch("/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt }),
       });
 
       const data = await res.json();
-
       if (!data.image) {
-        document.getElementById("status").innerText =
-          "❌ Error generating image";
+        document.getElementById("status").innerText = "Failed";
         return;
       }
 
-      lastImageUrl = data.image;
-
+      imageUrl = data.image;
       const img = document.getElementById("result");
-      img.src = data.image;
+      img.src = imageUrl;
       img.style.display = "block";
 
       document.getElementById("status").innerText =
-        "🔒 Pay to download image";
-      document.getElementById("payBtn").style.display = "inline-block";
-    }
+        "Image ready. Pay to download.";
+      document.getElementById("payBtn").style.display = "block";
+    };
 
-    function pay() {
+    document.getElementById("payBtn").onclick = () => {
       const handler = PaystackPop.setup({
-        key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 👈 PUBLIC KEY
-        email: "customer@email.com",
+        key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 LIVE PUBLIC KEY
+        email: "customer@teleimage.ai",
         amount: 200 * 100,
         currency: "NGN",
-        callback: function () {
-          paid = true;
-          document.getElementById("status").innerText =
-            "✅ Payment successful. Download unlocked.";
-          document.getElementById("payBtn").style.display = "none";
-          document.getElementById("downloadBtn").style.display = "inline-block";
+        callback: async function (response) {
+          const verify = await fetch("/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reference: response.reference }),
+          });
+
+          const result = await verify.json();
+          if (result.success) {
+            document.getElementById("status").innerText =
+              "Payment verified. Download unlocked.";
+            document.getElementById("downloadBtn").style.display = "block";
+          } else {
+            alert("Payment failed");
+          }
         },
-        onClose: function () {
-          alert("Payment cancelled");
-        }
       });
       handler.openIframe();
-    }
+    };
 
-    async function downloadImage() {
-      if (!paid || !lastImageUrl) return;
-
-      const response = await fetch(lastImageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-
+    document.getElementById("downloadBtn").onclick = async () => {
+      const blob = await fetch(imageUrl).then(r => r.blob());
+      const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "tele-image-ai.png";
-      document.body.appendChild(a);
       a.click();
-
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    }
+      URL.revokeObjectURL(url);
+    };
   </script>
 
 </body>
