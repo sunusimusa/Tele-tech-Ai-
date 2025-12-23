@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <title>Tele AI Chat</title>
   <script src="https://js.paystack.co/v1/inline.js"></script>
-  <link rel="stylesheet" href="style.css">
+ <link rel="stylesheet" href="style.css">
+ <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 <body>
 
@@ -18,10 +19,44 @@
 
 <hr>
 
-<button onclick="pay('week', 500)">Upgrade ₦500 (1 week)</button>
-<button onclick="pay('2weeks', 900)">Upgrade ₦900 (2 weeks)</button>
-<button onclick="pay('month', 1500)">Upgrade ₦1500 (1 month)</button>
+<div class="upgrade">
+  <button onclick="pay(500, 7)">Upgrade ₦500 (1 week)</button>
+  <button onclick="pay(900, 14)">Upgrade ₦900 (2 weeks)</button>
+  <button onclick="pay(1500, 30)">Upgrade ₦1500 (1 month)</button>
+</div>
+<script>
+function pay(amount, days) {
+  const handler = PaystackPop.setup({
+    key: "pk_live_SAKA_NAKA_ANAN", // ❗ PUBLIC KEY LIVE
+    email: "user@teleai.chat",
+    amount: amount * 100,
+    currency: "NGN",
+    callback: function (response) {
+      fetch("/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: response.reference,
+          days: days
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("✅ Upgrade successful!");
+        } else {
+          alert("❌ Payment not verified");
+        }
+      });
+    },
+    onClose: function () {
+      alert("Payment cancelled");
+    }
+  });
 
-<script src="app.js"></script>
+  handler.openIframe();
+}
+</script>
+
 </body>
 </html>
