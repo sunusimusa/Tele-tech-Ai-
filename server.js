@@ -5,27 +5,69 @@ import fetch from "node-fetch";
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 10000;
+
 app.use(express.json());
 app.use(express.static("public"));
 
 /* =========================
-   HEALTH CHECK
+   IN-MEMORY USERS (REAL LOGIC)
+========================= */
+const users = {}; 
+// users[email] = { freeUntil, proUntil }
+
+/* =========================
+   HELPERS
+========================= */
+function now() {
+  return Date.now();
+}
+
+function hours(h) {
+  return h * 60 * 60 * 1000;
+}
+
+function days(d) {
+  return d * 24 * 60 * 60 * 1000;
+}
+
+/* =========================
+   HEALTH
 ========================= */
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
 /* =========================
-   AI CHAT ROUTE
+   AI CHAT
 ========================= */
 app.post("/chat", async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "No message provided" });
+    const { message, email } = req.body;
+    if (!message || !email) {
+      return res.status(400).json({ error: "Missing message or email" });
     }
 
-    const aiRes = await fetch(
+    // create user if not exists
+    if (!users[email]) {
+      users[email] = {
+        freeUntil: now() + hours(8), // ⏱️ 8 hours free
+        proUntil: 0
+      };
+    }
+
+    const user = users[email];
+
+    const hasAccess =
+      now() < user.freeUntil || now() < user.proUntil;
+
+    if (!hasAccess) {
+      return res.json({
+        error: "Free time expired. Upgrade to PRO."
+      });
+    }
+
+    const response = await fetch(
       "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
@@ -36,44 +78,33 @@ app.post("/chat", async (req, res) => {
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: [
-            {
-              role: "system",
-              content: "You are a helpful AI assistant. Reply in Hausa if user uses Hausa."
-            },
-            {
-              role: "user",
-              content: message
-            }
+            { role: "system", content: "You are a helpful AI assistant." },
+            { role: "user", content: message }
           ]
         })
       }
     );
 
-    const data = await aiRes.json();
-
-    if (!data.choices || !data.choices[0]) {
-      console.error("OpenAI error:", data);
-      return res.status(500).json({ error: "AI response error" });
-    }
+    const data = await response.json();
 
     res.json({
       reply: data.choices[0].message.content
     });
 
   } catch (err) {
-    console.error("AI SERVER ERROR:", err);
+    console.error(err);
     res.status(500).json({ error: "AI error" });
   }
 });
 
 /* =========================
-   PAYSTACK VERIFY
+   PAYSTACK VERIFY (UPGRADE)
 ========================= */
 app.post("/verify-payment", async (req, res) => {
-  const { reference, days } = req.body;
+  const { email, reference, plan } = req.body;
 
   try {
-    const payRes = await fetch(
+    const verify = await fetch(
       `https://api.paystack.co/transaction/verify/${reference}`,
       {
         headers: {
@@ -82,28 +113,33 @@ app.post("/verify-payment", async (req, res) => {
       }
     );
 
-    const data = await payRes.json();
+    const data = await verify.json();
 
-    if (data.status && data.data.status === "success") {
-      // nan daga baya zaka iya saka DB
-      return res.json({
-        success: true,
-        proDays: days
-      });
+    if (!data.status || data.data.status !== "success") {
+      return res.json({ success: false });
     }
 
-    res.json({ success: false });
+    if (!users[email]) {
+      users[email] = {
+        freeUntil: now() + hours(8),
+        proUntil: 0
+      };
+    }
+
+    if (plan === "1day") users[email].proUntil = now() + days(1);
+    if (plan === "2weeks") users[email].proUntil = now() + days(14);
+    if (plan === "1month") users[email].proUntil = now() + days(30);
+
+    res.json({ success: true });
 
   } catch (err) {
-    console.error("PAYSTACK ERROR:", err);
     res.status(500).json({ success: false });
   }
 });
 
 /* =========================
-   START SERVER
+   START
 ========================= */
-const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log("✅ Server running on port", PORT);
 });
