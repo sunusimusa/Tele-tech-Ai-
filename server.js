@@ -6,33 +6,47 @@ app.use(express.json());
 app.use(express.static("public"));
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 
+// IMAGE GENERATION
 app.post("/generate", async (req, res) => {
   const { prompt } = req.body;
-  if (!prompt) return res.json({ error: "No prompt" });
+  if (!prompt) {
+    return res.status(400).json({ error: "No prompt provided" });
+  }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-image-1",
-        prompt: prompt,
-        size: "1024x1024"
-      })
-    });
+    const response = await fetch(
+      "https://api.openai.com/v1/images/generations",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENAI_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-image-1",
+          prompt: prompt,
+          size: "1024x1024"
+        })
+      }
+    );
 
     const data = await response.json();
+
+    if (!data.data || !data.data[0]) {
+      return res.status(500).json({ error: "Image generation failed" });
+    }
+
     res.json({ image: data.data[0].url });
+
   } catch (err) {
-    res.json({ error: "Generation failed" });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
-import fetch from "node-fetch";
 
+// PAYSTACK VERIFY
 app.post("/verify-payment", async (req, res) => {
   const { reference } = req.body;
 
@@ -41,7 +55,7 @@ app.post("/verify-payment", async (req, res) => {
       `https://api.paystack.co/transaction/verify/${reference}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+          Authorization: `Bearer ${PAYSTACK_SECRET}`
         }
       }
     );
@@ -53,8 +67,12 @@ app.post("/verify-payment", async (req, res) => {
     } else {
       return res.status(400).json({ success: false });
     }
+
   } catch (err) {
     res.status(500).json({ success: false });
   }
 });
-app.listen(3000, () => console.log("Server running"));
+
+app.listen(3000, () => {
+  console.log("✅ Server running on port 3000");
+});
