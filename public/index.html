@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tele Image AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
@@ -12,28 +12,23 @@
       padding: 20px;
       text-align: center;
     }
-    input {
-      width: 90%;
-      max-width: 350px;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    button {
+    input, button {
       width: 90%;
       max-width: 350px;
       padding: 14px;
-      border: none;
+      margin-top: 10px;
       border-radius: 6px;
-      background: #2563eb;
-      color: white;
+      border: 1px solid #ccc;
       font-size: 16px;
-      cursor: pointer;
+    }
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: none;
     }
     img {
+      margin-top: 15px;
       max-width: 100%;
-      margin-top: 20px;
       border-radius: 8px;
       display: none;
     }
@@ -49,27 +44,21 @@
   <h2>🎨 Tele Image AI</h2>
 
   <input id="prompt" placeholder="Describe image (e.g. dog wearing glasses)" />
-
-  <br>
   <button onclick="generate()">Generate Image</button>
 
   <p id="status"></p>
-
   <img id="result" />
 
   <script>
     async function generate() {
       const prompt = document.getElementById("prompt").value;
-      const status = document.getElementById("status");
-      const img = document.getElementById("result");
-
       if (!prompt) {
-        alert("Enter a prompt");
+        alert("Enter prompt");
         return;
       }
 
-      status.innerText = "⏳ Generating...";
-      img.style.display = "none";
+      document.getElementById("status").innerText = "⏳ Generating...";
+      document.getElementById("result").style.display = "none";
 
       try {
         const res = await fetch("/generate", {
@@ -81,16 +70,17 @@
         const data = await res.json();
 
         if (!data.image) {
-          status.innerText = "❌ Generation failed";
+          document.getElementById("status").innerText = "❌ Generation failed";
           return;
         }
 
+        const img = document.getElementById("result");
         img.src = data.image;
         img.style.display = "block";
-        status.innerText = "✅ Image generated";
+        document.getElementById("status").innerText = "✅ Image generated";
 
       } catch (err) {
-        status.innerText = "❌ Server error";
+        document.getElementById("status").innerText = "❌ Server error";
       }
     }
   </script>
