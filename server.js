@@ -1,6 +1,6 @@
 import express from "express";
-import dotenv from "dotenv";
 import fetch from "node-fetch";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -17,9 +17,8 @@ app.get("/health", (req, res) => {
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
-
     if (!message) {
-      return res.status(400).json({ error: "No message provided" });
+      return res.status(400).json({ error: "No message" });
     }
 
     const response = await fetch(
@@ -27,7 +26,7 @@ app.post("/chat", async (req, res) => {
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -44,7 +43,7 @@ app.post("/chat", async (req, res) => {
 
     if (!data.choices) {
       console.error(data);
-      return res.status(500).json({ error: "AI response error" });
+      return res.status(500).json({ error: "AI error" });
     }
 
     res.json({
@@ -52,8 +51,35 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("CHAT ERROR:", err);
-    res.status(500).json({ error: "AI error" });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* ================= VERIFY PAYMENT ================= */
+app.post("/verify-payment", async (req, res) => {
+  const { reference } = req.body;
+
+  try {
+    const response = await fetch(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.status && data.data.status === "success") {
+      return res.json({ success: true });
+    } else {
+      return res.json({ success: false });
+    }
+
+  } catch (err) {
+    return res.status(500).json({ success: false });
   }
 });
 
