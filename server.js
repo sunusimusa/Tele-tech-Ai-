@@ -24,7 +24,7 @@ app.post("/generate", async (req, res) => {
     return res.json({ error: "Prompt required" });
   }
 
-  // ⚠️ https://tele-tech-ai.onrender.com
+  // ⚠️ 
   const fakeImage =
     "https://picsum.photos/1024/1024?random=" + Date.now();
 
