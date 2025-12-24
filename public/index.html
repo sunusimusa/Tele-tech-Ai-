@@ -51,38 +51,41 @@
     }
   </style>
 </head>
-
 <body>
 
-  <h2>💬 Tele AI Chat</h2>
+<h2>🤖 Tele AI Chat</h2>
 
-  <!-- 🧑 USER INPUT -->
-  <textarea id="message" placeholder="Rubuta sakonka anan..."></textarea><br>
-  <button onclick="sendMessage()">Send</button>
+<div id="chatBox"></div>
 
-  <div id="status"></div>
+<textarea id="message" placeholder="Rubuta sakonka..."></textarea>
+<button id="sendBtn">Send Message</button>
 
-  <!-- 💬 CHAT AREA -->
-  <div id="chat"></div>
+<p id="status"></p>
 
-  <hr>
+<hr>
 
-  <!-- 💰 UPGRADE BUTTONS -->
-  <button onclick="pay(500, 7)">Upgrade ₦500 (1 week)</button>
-  <button onclick="pay(900, 14)">Upgrade ₦900 (2 weeks)</button>
-  <button onclick="pay(1500, 30)">Upgrade ₦1500 (1 month)</button>
+<button class="upgradeBtn" data-days="7" data-amount="500">
+  Upgrade ₦500 (1 week)
+</button>
 
-  <hr>
+<button class="upgradeBtn" data-days="14" data-amount="900">
+  Upgrade ₦900 (2 weeks)
+</button>
 
-  <!-- ================= ADS BANNER HERE ================= -->
-  <!-- 👇 NAN NE ZAKA SA AD SCRIPT DINKA -->
-  <div id="ads" style="margin-top:20px;">
-    <!-- EXAMPLE -->
-    <!--
-    <script src="https://your-ad-network.js"></script>
-    -->
-    <small>Advertisement</small>
-  </div>
+<button class="upgradeBtn" data-days="30" data-amount="1500">
+  Upgrade ₦1500 (1 month)
+</button>
+
+<hr>
+
+<div id="ads">
+  <small>Advertisement</small>
+  <!-- saka ads script nan -->
+</div>
+
+<script src="app.js"></script>
+</body>
+
   <!-- ================================================== -->
 
 <script>
