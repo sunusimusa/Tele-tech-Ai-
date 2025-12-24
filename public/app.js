@@ -1,14 +1,17 @@
 const chatBox = document.getElementById("chatBox");
-const messageInput = document.getElementById("message");
+const sendBtn = document.getElementById("sendBtn");
+const msgInput = document.getElementById("message");
 const statusEl = document.getElementById("status");
 
-/* ================= CHAT ================= */
-async function sendMessage() {
-  const text = messageInput.value.trim();
+/* ======================
+   SEND MESSAGE
+====================== */
+sendBtn.addEventListener("click", async () => {
+  const text = msgInput.value.trim();
   if (!text) return;
 
-  addMessage("You", text);
-  messageInput.value = "";
+  addMsg("You", text);
+  msgInput.value = "";
   statusEl.innerText = "⏳ AI na tunani...";
 
   try {
@@ -21,7 +24,7 @@ async function sendMessage() {
     const data = await res.json();
 
     if (data.reply) {
-      addMessage("AI", data.reply);
+      addMsg("AI", data.reply);
       statusEl.innerText = "";
     } else {
       statusEl.innerText = "❌ Error daga AI";
@@ -29,25 +32,38 @@ async function sendMessage() {
   } catch (err) {
     statusEl.innerText = "❌ Network error";
   }
-}
+});
 
-function addMessage(sender, text) {
+function addMsg(sender, text) {
   const div = document.createElement("div");
   div.innerHTML = `<b>${sender}:</b> ${text}`;
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* ================= PAYSTACK ================= */
-function upgrade(days, amount) {
+/* ======================
+   PAYSTACK UPGRADE
+====================== */
+document.querySelectorAll(".upgradeBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const days = btn.dataset.days;
+    const amount = btn.dataset.amount;
+
+    payWithPaystack(days, amount);
+  });
+});
+
+function payWithPaystack(days, amount) {
   const handler = PaystackPop.setup({
-    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 SAKA NAKA
+    key: "PK_TEST_OR_LIVE_KEY_ANAN", // 🔴 SAKA KEY DINKA
     email: "user@teleai.app",
     amount: amount * 100,
     currency: "NGN",
     callback: function (response) {
-      statusEl.innerText = "✅ Payment successful!";
-      // daga baya zaka kira /verify-payment
+      statusEl.innerText = "✅ Payment successful. PRO activated!";
+      console.log("Reference:", response.reference);
+
+      // zaka iya kiran /verify-payment anan
     },
     onClose: function () {
       statusEl.innerText = "❌ Payment cancelled";
