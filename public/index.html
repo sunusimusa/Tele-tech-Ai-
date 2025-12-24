@@ -5,164 +5,68 @@
   <title>Tele AI Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- ✅ PAYSTACK -->
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
+  <!-- PAYSTACK -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
-  <!-- 🎨 STYLE -->
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 15px;
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: 10px;
-    }
-    textarea {
-      width: 95%;
-      max-width: 500px;
-      height: 90px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      padding: 12px 18px;
-      margin-top: 10px;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    #chat {
-      margin-top: 15px;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-    }
-    .user {
-      font-weight: bold;
-    }
-    .ai {
-      margin-bottom: 10px;
-      color: green;
-    }
-    .error {
-      color: red;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>🤖 Tele AI Chat</h2>
+  <h2>🤖 Tele AI Chat</h2>
 
-<div id="chatBox"></div>
+  <!-- CHAT AREA -->
+  <div id="chatBox" style="border:1px solid #ccc; height:300px; overflow-y:auto; padding:10px; margin-bottom:10px;"></div>
 
-<textarea id="message" placeholder="Rubuta sakonka..."></textarea>
-<button id="sendBtn">Send Message</button>
+  <!-- MESSAGE INPUT -->
+  <textarea id="message" placeholder="Rubuta sakonka..." style="width:100%;height:80px;"></textarea>
 
-<p id="status"></p>
+  <!-- SEND BUTTON -->
+  <button id="sendBtn" style="width:100%;margin-top:5px;">
+    Send Message
+  </button>
 
-<hr>
+  <p id="status"></p>
 
-<button class="upgradeBtn" data-days="7" data-amount="500">
-  Upgrade ₦500 (1 week)
-</button>
+  <hr>
 
-<button class="upgradeBtn" data-days="14" data-amount="900">
-  Upgrade ₦900 (2 weeks)
-</button>
+  <!-- ================= PRO UPGRADE ================= -->
+  <button class="upgradeBtn" data-days="7" data-amount="500">
+    Upgrade ₦500 (1 week)
+  </button>
 
-<button class="upgradeBtn" data-days="30" data-amount="1500">
-  Upgrade ₦1500 (1 month)
-</button>
+  <button class="upgradeBtn" data-days="14" data-amount="900">
+    Upgrade ₦900 (2 weeks)
+  </button>
 
-<hr>
+  <button class="upgradeBtn" data-days="30" data-amount="1500">
+    Upgrade ₦1500 (1 month)
+  </button>
 
-<div id="ads">
-  <small>Advertisement</small>
-  <!-- saka ads script nan -->
-</div>
+  <hr>
 
-<script src="app.js"></script>
-</body>
+  <!-- ================= ADS BANNER ================= -->
+  <div id="ads" style="margin-top:20px;text-align:center;">
+    <small>Advertisement</small><br>
+    <!-- 🔽 SAKA ADS SCRIPT ANAN 🔽 -->
+    <!-- <script src="ADS_SCRIPT_URL"></script> -->
+  </div>
+  <!-- ============================================== -->
 
-  <!-- ================================================== -->
+  <!-- FRONTEND LOGIC -->
+  <script src="app.js"></script>
 
-<script>
-let freeUntil = localStorage.getItem("freeUntil");
-if (!freeUntil) {
-  freeUntil = Date.now() + 8 * 60 * 60 * 1000; // 8 hours
-  localStorage.setItem("freeUntil", freeUntil);
-}
-
-function canChat() {
-  return Date.now() < freeUntil;
-}
-
-async function sendMessage() {
-  const msg = document.getElementById("message").value;
-  if (!msg) return;
-
-  if (!canChat()) {
-    document.getElementById("status").innerHTML =
-      "<p class='error'>❌ Free chat ya kare. Don Allah ka yi upgrade.</p>";
-    return;
-  }
-
-  document.getElementById("status").innerHTML = "⏳ AI na tunani...";
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: msg })
-    });
-
-    const data = await res.json();
-    if (data.error) throw data.error;
-
-    const chat = document.getElementById("chat");
-    chat.innerHTML += `<p class="user">You: ${msg}</p>`;
-    chat.innerHTML += `<p class="ai">AI: ${data.reply}</p>`;
-
-    document.getElementById("message").value = "";
-    document.getElementById("status").innerHTML = "✅ An amsa";
-
-  } catch (e) {
-    document.getElementById("status").innerHTML =
-      "<p class='error'>❌ AI error</p>";
-  }
-}
-
-/* 💳 PAYSTACK */
-function pay(amount, days) {
-  const handler = PaystackPop.setup({
-    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 SAKA PUBLIC KEY DINKA
-    email: "user@teleai.chat",
-    amount: amount * 100,
-    currency: "NGN",
-    callback: function (response) {
-      fetch("/verify-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reference: response.reference,
-          days: days
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          freeUntil = Date.now() + days * 24 * 60 * 60 * 1000;
-          localStorage.setItem("freeUntil", freeUntil);
-          alert("✅ PRO an kunna!");
-        }
-      });
+  <!-- SERVICE WORKER -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js")
+        .then(() => console.log("Service Worker registered"))
+        .catch(err => console.log("SW error", err));
     }
-  });
-  handler.openIframe();
-}
-</script>
+  </script>
 
 </body>
 </html>
