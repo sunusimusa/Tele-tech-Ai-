@@ -2,24 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>🤖 Tele AI Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tele AI Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- PAYSTACK -->
+  <!-- Paystack -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <h2>🤖 Tele AI Chat</h2>
 
-<!-- CHAT BOX -->
-<div id="chatBox" style="border:1px solid #ccc; padding:10px; height:250px; overflow-y:auto"></div>
+<div id="chatBox" style="border:1px solid #ccc; padding:10px; height:200px; overflow:auto;"></div>
 
-<!-- MESSAGE -->
-<textarea id="message" placeholder="Rubuta sakonka..." style="width:100%;height:60px"></textarea>
+<textarea id="message" placeholder="Rubuta sakonka..." style="width:100%;height:60px;"></textarea>
 
+<br><br>
 <button id="sendBtn">Send Message</button>
 
 <p id="status"></p>
@@ -27,19 +26,18 @@
 <hr>
 
 <!-- PRO BUTTONS -->
-<button class="upgradeBtn" data-days="7" data-amount="500">Upgrade ₦500 (1 week)</button>
-<button class="upgradeBtn" data-days="14" data-amount="900">Upgrade ₦900 (2 weeks)</button>
-<button class="upgradeBtn" data-days="30" data-amount="1500">Upgrade ₦1500 (1 month)</button>
+<button id="pro7">Upgrade ₦500 (1 week)</button>
+<button id="pro14">Upgrade ₦900 (2 weeks)</button>
+<button id="pro30">Upgrade ₦1500 (1 month)</button>
 
 <hr>
 
 <!-- ADS -->
 <div id="ads" style="margin-top:20px;text-align:center">
   <small>Advertisement</small><br>
-  <!-- SAKA ADS SCRIPT ANAN -->
+  <!-- Google AdSense code zaka saka anan daga baya -->
 </div>
 
-<!-- JS -->
 <script src="app.js"></script>
 </body>
 </html>
