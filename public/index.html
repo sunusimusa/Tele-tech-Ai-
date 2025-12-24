@@ -1,44 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Tele AI Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- PAYSTACK -->
+  <!-- ✅ PAYSTACK -->
   <script src="https://js.paystack.co/v1/inline.js"></script>
 
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#2563eb">
-
-  <link rel="stylesheet" href="style.css">
+  <!-- 🎨 STYLE -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 15px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 95%;
+      max-width: 500px;
+      height: 90px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 12px 18px;
+      margin-top: 10px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    #chat {
+      margin-top: 15px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .user {
+      font-weight: bold;
+    }
+    .ai {
+      margin-bottom: 10px;
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>🤖 Tele AI Chat</h2>
+  <h2>💬 Tele AI Chat</h2>
 
-<div id="chatBox"></div>
+  <!-- 🧑 USER INPUT -->
+  <textarea id="message" placeholder="Rubuta sakonka anan..."></textarea><br>
+  <button onclick="sendMessage()">Send</button>
 
-<textarea id="message" placeholder="Rubuta sakonka..."></textarea>
-<button onclick="sendMessage()">Send Message</button>
+  <div id="status"></div>
 
-<p id="status"></p>
+  <!-- 💬 CHAT AREA -->
+  <div id="chat"></div>
 
-<hr>
+  <hr>
 
-<!-- PRO UPGRADE -->
-<button onclick="upgrade(7, 500)">Upgrade ₦500 (1 week)</button>
-<button onclick="upgrade(14, 900)">Upgrade ₦900 (2 weeks)</button>
-<button onclick="upgrade(30, 1500)">Upgrade ₦1500 (1 month)</button>
+  <!-- 💰 UPGRADE BUTTONS -->
+  <button onclick="pay(500, 7)">Upgrade ₦500 (1 week)</button>
+  <button onclick="pay(900, 14)">Upgrade ₦900 (2 weeks)</button>
+  <button onclick="pay(1500, 30)">Upgrade ₦1500 (1 month)</button>
 
-<hr>
+  <hr>
 
-<!-- ADS -->
-<div id="ads" style="text-align:center;margin-top:20px">
-  <small>Advertisement</small><br>
-  <!-- ADS SCRIPT ANAN -->
-</div>
+  <!-- ================= ADS BANNER HERE ================= -->
+  <!-- 👇 NAN NE ZAKA SA AD SCRIPT DINKA -->
+  <div id="ads" style="margin-top:20px;">
+    <!-- EXAMPLE -->
+    <!--
+    <script src="https://your-ad-network.js"></script>
+    -->
+    <small>Advertisement</small>
+  </div>
+  <!-- ================================================== -->
 
-<script src="app.js"></script>
+<script>
+let freeUntil = localStorage.getItem("freeUntil");
+if (!freeUntil) {
+  freeUntil = Date.now() + 8 * 60 * 60 * 1000; // 8 hours
+  localStorage.setItem("freeUntil", freeUntil);
+}
+
+function canChat() {
+  return Date.now() < freeUntil;
+}
+
+async function sendMessage() {
+  const msg = document.getElementById("message").value;
+  if (!msg) return;
+
+  if (!canChat()) {
+    document.getElementById("status").innerHTML =
+      "<p class='error'>❌ Free chat ya kare. Don Allah ka yi upgrade.</p>";
+    return;
+  }
+
+  document.getElementById("status").innerHTML = "⏳ AI na tunani...";
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
+    });
+
+    const data = await res.json();
+    if (data.error) throw data.error;
+
+    const chat = document.getElementById("chat");
+    chat.innerHTML += `<p class="user">You: ${msg}</p>`;
+    chat.innerHTML += `<p class="ai">AI: ${data.reply}</p>`;
+
+    document.getElementById("message").value = "";
+    document.getElementById("status").innerHTML = "✅ An amsa";
+
+  } catch (e) {
+    document.getElementById("status").innerHTML =
+      "<p class='error'>❌ AI error</p>";
+  }
+}
+
+/* 💳 PAYSTACK */
+function pay(amount, days) {
+  const handler = PaystackPop.setup({
+    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 SAKA PUBLIC KEY DINKA
+    email: "user@teleai.chat",
+    amount: amount * 100,
+    currency: "NGN",
+    callback: function (response) {
+      fetch("/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: response.reference,
+          days: days
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          freeUntil = Date.now() + days * 24 * 60 * 60 * 1000;
+          localStorage.setItem("freeUntil", freeUntil);
+          alert("✅ PRO an kunna!");
+        }
+      });
+    }
+  });
+  handler.openIframe();
+}
+</script>
+
 </body>
 </html>
