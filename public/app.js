@@ -1,15 +1,15 @@
 const chatBox = document.getElementById("chatBox");
 const sendBtn = document.getElementById("sendBtn");
-const messageInput = document.getElementById("message");
+const msgInput = document.getElementById("message");
 const statusEl = document.getElementById("status");
 
-/* ================= CHAT ================= */
+// CHAT
 sendBtn.addEventListener("click", async () => {
-  const text = messageInput.value.trim();
+  const text = msgInput.value.trim();
   if (!text) return;
 
-  addMsg("You", text);
-  messageInput.value = "";
+  chatBox.innerHTML += `<p><b>You:</b> ${text}</p>`;
+  msgInput.value = "";
   statusEl.innerText = "⏳ AI na tunani...";
 
   try {
@@ -22,42 +22,32 @@ sendBtn.addEventListener("click", async () => {
     const data = await res.json();
 
     if (data.reply) {
-      addMsg("AI", data.reply);
+      chatBox.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
       statusEl.innerText = "";
     } else {
       statusEl.innerText = "❌ Error daga AI";
     }
-  } catch {
+  } catch (e) {
     statusEl.innerText = "❌ Network error";
   }
 });
 
-function addMsg(sender, text) {
-  const div = document.createElement("div");
-  div.innerHTML = `<b>${sender}:</b> ${text}`;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
+// PAYSTACK FUNCTION
+function upgrade(days, amount) {
+  const handler = PaystackPop.setup({
+    key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 saka naka
+    email: "user@teleai.app",
+    amount: amount * 100,
+    currency: "NGN",
+    callback: function (response) {
+      alert("Payment success!");
+      console.log("Ref:", response.reference);
+    }
+  });
+  handler.openIframe();
 }
 
-/* ================= PAYSTACK ================= */
-document.querySelectorAll(".upgradeBtn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const days = btn.dataset.days;
-    const amount = btn.dataset.amount;
-
-    PaystackPop.setup({
-      key: "pk_live_193ec0bed7f25a41f8d9ab473ebfdd4d55db13ba", // 🔴 saka public key
-      email: "user@teleai.app",
-      amount: amount * 100,
-      currency: "NGN",
-      callback: function (response) {
-        statusEl.innerText = "✅ Payment successful!";
-        fetch("/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reference: response.reference, days })
-        });
-      }
-    }).openIframe();
-  });
-});
+// PRO BUTTONS
+document.getElementById("pro7").onclick  = () => upgrade(7, 500);
+document.getElementById("pro14").onclick = () => upgrade(14, 900);
+document.getElementById("pro30").onclick = () => upgrade(30, 1500);
